@@ -33,9 +33,9 @@ complex Unity management tasks.
 The following configurations are to be added to the playbook soon:
 
 - Pool Creation
-..* Protection Scheme
-..* Select Drives for pool
-..* Set compression/dedupe settings
+  * Protection Scheme
+  * Select Drives for pool
+  * Set compression/dedupe settings
 - Alternative Admin Account
 - Alternative Admin Password
 - Licensing
