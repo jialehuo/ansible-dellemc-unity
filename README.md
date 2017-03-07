@@ -4,10 +4,14 @@
 - Expects a CentOS/RHEL 7 jump host
 
 These playbooks configures and manages EMC Unity storage appliance.
-To use them, first edit the "hosts" inventory file to contain the
-hostnames of the jump host on which you want to run programs that 
-interact with the Unity system, and edit the group_vars/all file to 
-set any Unity configuration parameters you need.
+To use them, first connect the Unity system's management interface to 
+a network with DHCP service. Note the assigned IP address of Unity's
+management interface. Then, setup a RHEL 7 or derivative jump host on which 
+you will run programs to interact with the Unity system.  
+Next, edit the "hosts" inventory file to contain the
+hostname or IP address of the jump host, and edit the group_vars/all file to 
+set any Unity configuration parameters you need, inclucing the Unity management 
+interface IP.
 
 Then run the playbook, like this:
 
