@@ -18,7 +18,7 @@ class UnitySession:
     r = self.session.get(url, params=params, headers=self.headers, verify=False)
     return r.status_code, r.text
 
-  def startSession(self):
+  def start(self):
     r = self.session.get(self.base+"/instances/system/0", auth=requests.auth.HTTPBasicAuth(self.username, self.password), headers=self.headers, verify=False)
     if r.status_code == 200:
       # Add 'EMC-CSRF-TOKEN' header
@@ -27,7 +27,7 @@ class UnitySession:
     else:
       return False	# Session not started
 
-  def stopSession(self):
+  def stop(self):
     url = self.base + '/types/loginSessionInfo/action/logout'
     args = {"localCleanupOnly" : "true"}
     self.doPost(url, args)
