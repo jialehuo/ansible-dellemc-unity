@@ -1,0 +1,44 @@
+---
+
+- name: 'Verify OS distro and release version'
+  fail: msg="OS must be RedHat 7 or derivatives"
+  when: ansible_os_family != "RedHat" or ansible_distribution_major_version != "7"
+
+- name: Install RPM packages
+  remote_user: root
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+   - epel-release
+   - python-pip
+
+- name: Install Python libraries
+  remote_user: root
+  pip: 
+    name: requests
+    version: 2.13.0
+
+- name: copy Python files to target
+  copy: 
+    src: unity
+    dest: ~/
+    mode: 0755
+ 
+- name: Accept EULA
+  command: python unity/accept_eula.py {{ host }} {{ username }} {{ old_password }}  
+  register: out
+
+- name: Update Password
+  command: python unity/update_password.py {{ host }} {{ username }} {{ old_password }} {{ password }}  
+  register: out
+
+- name: Update DNS servers
+  command: python unity/dns_servers.py {{ host }} {{ username }} {{ password }} {{ dns_servers }}
+  register: out
+
+- name: Update NTP servers
+  command: python unity/ntp_servers.py {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
+  register: out
+
+- debug: var=out.stdout_lines
