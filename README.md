@@ -10,7 +10,7 @@ management interface. Then, setup a RHEL 7 or derivative jump host on which
 you will run programs to interact with the Unity system.  
 Next, edit the "hosts" inventory file to contain the
 hostname or IP address of the jump host, and edit the group_vars/all file to 
-set any Unity configuration parameters you need, inclucing the Unity management 
+set any Unity configuration parameters you need, including the Unity management 
 interface IP.
 
 Then run the playbook, like this:
