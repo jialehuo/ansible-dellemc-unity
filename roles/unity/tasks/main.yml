@@ -11,13 +11,19 @@
   command: python ./roles/unity/files/unity/unity_cmd.py accept-eula {{ host }} {{ username }} {{ old_password }}
   register: out
 
+- debug: var=out.stdout_lines
+
 - name: Update Password
   command: python ./roles/unity/files/unity/unity_cmd.py update-password {{ host }} {{ username }} {{ old_password }} {{ password }}
   register: out
 
+- debug: var=out.stdout_lines
+
 - name: Update DNS servers
   command: python ./roles/unity/files/unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
   register: out
+
+- debug: var=out.stdout_lines
 
 - name: Update NTP servers
   command: python ./roles/unity/files/unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
