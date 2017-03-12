@@ -4,21 +4,23 @@
     name: epel
     description: EPEL YUM repo
     baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+  become: true
   when: ansible_distribution == "CentOS"
 
 - name: Install pip on all OSes
-  easy_install: 
+  easy_install:
     name: pip
     state: latest
 
 - name: Install libselinux-python on all OSes
-  package: 
+  package:
     name: libselinux-python
     state: present
+  become: true
   when: ansible_distribution != "MacOSX"
 
 - name: Install Python libraries
-  pip: 
+  pip:
     name: requests
     version: 2.13.0
   become: true

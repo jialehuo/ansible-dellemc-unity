@@ -16,7 +16,7 @@ interface IP.
 
 To run the playbook on a remote jump host:
 
-	ansible-playbook -i hosts site.yml -K
+	ansible-playbook -i hosts site.yml -k -K
 
 To run the playbook locally:
 

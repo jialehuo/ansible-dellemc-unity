@@ -1,7 +1,7 @@
 ---
 
 # Unity host address
-host: 192.168.0.202
+host: 192.168.0.34
 
 # Unity admin username
 username: admin
@@ -13,7 +13,7 @@ old_password: Password123#
 password: Password123!
 
 # DNS Servers
-dns_servers: "10.254.66.23 10.254.66.24"
+dns_servers: "192.168.0.10"
 
 # NTP Servers separated by space
-ntp_servers: "10.254.140.21 10.254.140.22"
+ntp_servers: "0.us.pool.ntp.org"

@@ -1,5 +1,12 @@
 ---
 
+- name: copy Python files to target
+  copy:
+    src: unity
+    dest: ~/roles/unity/files/
+    mode: 0755
+  when: ansible_connection != "local"
+
 - name: Accept EULA
   command: python ./roles/unity/files/unity/unity_cmd.py accept-eula {{ host }} {{ username }} {{ old_password }}
   register: out
