@@ -14,6 +14,9 @@ if s.start():
   elif cmd == "update-password":
     newPassword = sys.argv[5]
     s.updatePassword(newPassword)
+  elif cmd == "upload-license":
+    licensePath = sys.argv[5]
+    s.uploadLicense(licensePath)
   elif cmd == "update-dns":
     dnsServers = sys.argv[5:]
     s.updateDnsServers(dnsServers)

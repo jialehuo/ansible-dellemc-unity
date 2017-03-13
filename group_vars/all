@@ -12,6 +12,9 @@ old_password: Password123#
 # Unity admin password
 password: Password123!
 
+# Path to Unity license filea
+license_path: /home/labadmin/unity.lic
+
 # DNS Servers
 dns_servers: "10.254.66.23 10.254.66.24"
 

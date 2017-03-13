@@ -43,6 +43,14 @@ class UnitySession:
     self.doPost(url, args)
     self.password = newPassword
 
+  def uploadLicense(self, licensePath):
+    url = "https://" + self.host + '/upload/license'
+    files = {'upload': open(licensePath, 'rb')}
+    headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
+    r = self.session.post(url, files = files, headers=headers, verify=False)
+    print(r.status_code)
+    print(r.text)
+
   def updateDnsServers(self, dnsServers):
     url = self.base + '/instances/dnsServer/0'
     params = {'fields':'addresses,domain,origin'}

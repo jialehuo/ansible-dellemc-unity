@@ -33,12 +33,14 @@
   command: python unity/unity_cmd.py update-password {{ host }} {{ username }} {{ old_password }} {{ password }}  
   register: out
 
+- name: Upload license file 
+  command: python unity/unity_cmd.py upload-license {{ host }} {{ username }} {{ password }} {{ license_path }}  
+  register: out
+
 - name: Update DNS servers
   command: python unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
-  register: out
 
 - name: Update NTP servers
   command: python unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
-  register: out
 
 - debug: var=out.stdout_lines
