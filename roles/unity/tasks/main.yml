@@ -1,44 +1,32 @@
 ---
 
-- name: 'Verify OS distro and release version'
-  fail: msg="OS must be RedHat 7 or derivatives"
-  when: ansible_os_family != "RedHat" or ansible_distribution_major_version != "7"
-
-- name: Install RPM packages
-  remote_user: root
-  yum: 
-    name: "{{ item }}"
-    state: present
-  with_items:
-   - epel-release
-   - python-pip
-
-- name: Install Python libraries
-  remote_user: root
-  pip: 
-    name: requests
-    version: 2.13.0
-
 - name: copy Python files to target
-  copy: 
+  copy:
     src: unity
-    dest: ~/
+    dest: ~/roles/unity/files/
     mode: 0755
- 
+  when: ansible_connection != "local"
+
 - name: Accept EULA
-  command: python unity/unity_cmd.py accept-eula {{ host }} {{ username }} {{ old_password }}  
+  command: python ./roles/unity/files/unity/unity_cmd.py accept-eula {{ host }} {{ username }} {{ old_password }}
   register: out
+
+- debug: var=out.stdout_lines
 
 - name: Update Password
-  command: python unity/unity_cmd.py update-password {{ host }} {{ username }} {{ old_password }} {{ password }}  
+  command: python ./roles/unity/files/unity/unity_cmd.py update-password {{ host }} {{ username }} {{ old_password }} {{ password }}
   register: out
+
+- debug: var=out.stdout_lines
 
 - name: Update DNS servers
-  command: python unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
+  command: python ./roles/unity/files/unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
   register: out
 
+- debug: var=out.stdout_lines
+
 - name: Update NTP servers
-  command: python unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
+  command: python ./roles/unity/files/unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
   register: out
 
 - debug: var=out.stdout_lines
