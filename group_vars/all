@@ -1,7 +1,7 @@
 ---
 
 # Unity host address
-host: 192.168.0.34
+host: 192.168.0.202
 
 # Unity admin username
 username: admin

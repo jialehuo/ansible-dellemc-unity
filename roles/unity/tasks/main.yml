@@ -1,12 +1,5 @@
 ---
 
-- name: copy Python files to target
-  copy:
-    src: unity
-    dest: ~/roles/unity/files/
-    mode: 0755
-  when: ansible_connection != "local"
-
 - name: Accept EULA
   command: python ./roles/unity/files/unity/unity_cmd.py accept-eula {{ host }} {{ username }} {{ old_password }}
   register: out
@@ -17,29 +10,22 @@
   command: python ./roles/unity/files/unity/unity_cmd.py update-password {{ host }} {{ username }} {{ old_password }} {{ password }}
   register: out
 
-<<<<<<< HEAD
+- debug: var=out.stdout_lines
+
 - name: Upload license file 
-  command: python unity/unity_cmd.py upload-license {{ host }} {{ username }} {{ password }} {{ license_path }}  
+  command: python ./roles/unity/files/unity/unity_cmd.py upload-license {{ host }} {{ username }} {{ password }} {{ license_path }}  
   register: out
 
-- name: Update DNS servers
-  command: python unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
-=======
 - debug: var=out.stdout_lines
 
 - name: Update DNS servers
   command: python ./roles/unity/files/unity/unity_cmd.py update-dns {{ host }} {{ username }} {{ password }} {{ dns_servers }}
   register: out
->>>>>>> d215ffa5a113c2d101bd8e8adffa13b85ca484cc
 
 - debug: var=out.stdout_lines
 
 - name: Update NTP servers
-<<<<<<< HEAD
-  command: python unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
-=======
   command: python ./roles/unity/files/unity/unity_cmd.py update-ntp {{ host }} {{ username }} {{ password }} {{ ntp_servers }}
   register: out
->>>>>>> d215ffa5a113c2d101bd8e8adffa13b85ca484cc
 
 - debug: var=out.stdout_lines

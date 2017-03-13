@@ -1,16 +1,10 @@
 ---
-- name: Add EPEL repo for Centos only
-  yum_repository:
-    name: epel
-    description: EPEL YUM repo
-    baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
-  become: true
-  when: ansible_distribution == "CentOS"
 
 - name: Install pip on all OSes
   easy_install:
     name: pip
     state: latest
+  become: true
 
 - name: Install libselinux-python on all OSes
   package:

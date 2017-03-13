@@ -1,24 +1,16 @@
 ## EMC Unity Configuration and Management
 
 - Requires Ansible 2.2 or newer
-- Can be run local or use a remote jump host
 - Supports running from OSX/RHEL (and derivatives)/Ubuntu (and derivatives)
 
 These playbooks configures and manages EMC Unity storage appliance.
 To use them, first connect the Unity system's management interface to 
-a network with DHCP service. Note the assigned IP address of Unity's
-management interface. Then, setup a RHEL 7 or derivative jump host on which 
-you will run programs to interact with the Unity system.  
-Next, edit the "hosts" inventory file to contain the
-hostname or IP address of the jump host, and edit the group_vars/all file to 
+a network with DHCP service, and note the assigned IP address of Unity's
+management interface. Then, edit the group_vars/all file to 
 set any Unity configuration parameters you need, including the Unity management 
 interface IP.
 
-To run the playbook on a remote jump host:
-
-	ansible-playbook -i hosts site.yml -k -K
-
-To run the playbook locally:
+To run the playbook:
 
     the hosts file should only have localhost
     ansible-playbook -i hosts -c local site.yml -K 
@@ -30,6 +22,7 @@ Currently, the playbook only handles the following configurations:
 
 - Accept Unity EULA
 - Update default admin user password
+- Licensing
 - Update DNS server list
 - Update NTP server list
 
@@ -48,7 +41,6 @@ The following configurations are to be added to the playbook soon:
   * Set compression/dedupe settings
 - Alternative Admin Account
 - Alternative Admin Password
-- Licensing
 - ESRS Setup
 - Logging settings
 - Others as needed to finish initial configuration
