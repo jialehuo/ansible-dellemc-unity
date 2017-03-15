@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Testing
+      dellemc_unity_init:
+        state: sync
+        force: yes
+        unity_username: admin
+        unity_password: Password123#
+        unity_hostname: "192.168.0.202"
+      register: result
+    - debug: var=result
