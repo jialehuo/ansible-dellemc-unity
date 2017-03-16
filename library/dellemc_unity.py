@@ -27,17 +27,17 @@ class Unity:
 
   def _getResult(self, resp):
     if resp.status_code // 100 == 2:	# HTTP status code 2xx = success
-      self.msg += self._getMsg(resp)
+      self.msg += self._getMsg(resp) + '. '
     else:
-      self.err = self._getMsg(resp)
+      self.err = self._getMsg(resp) + '. '
     return resp
 
   def _postResult(self, resp, url, args):
     if resp.status_code // 100 == 2:
       self.changed = True
-      self.msg += 'Updated: url=' + url + ', args=' + str(args)
+      self.msg += 'Updated: url=' + url + ', args=' + str(args) + '. '
     else:
-      self.err = self._getMsg(resp) + ', url=' + url + ', args=' + str(args)
+      self.err = self._getMsg(resp) + ', url=' + url + ', args=' + str(args) + '. '
 
   def _doPost(self, url, args):
     resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)

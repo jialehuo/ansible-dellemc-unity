@@ -5,10 +5,10 @@
       dellemc_unity:
         unity_hostname: "192.168.0.202"
         unity_username: admin
-        unity_password: Password123!
+        unity_password: Password123#
         unity_accept_eula: true
-        # unity_new_password: Password123!
-        # unity_license_path: /home/labadmin/unity.lic
+        unity_new_password: Password123!
+        unity_license_path: /home/labadmin/unity.lic
         unity_dns_servers:
           - 10.254.66.25
           - 10.254.66.26
