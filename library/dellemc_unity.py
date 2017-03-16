@@ -32,17 +32,18 @@ class Unity:
       self.err = self._getMsg(resp)
     return resp
 
-  def _postResult(self, resp, url, args):
+  def _postResult(self, resp, url, args, changed):
     if resp.status_code // 100 == 2:
-      self.changed = True
-      self.msg.append({'Updated': {'url': url, 'args': str(args)}})
+      self.changed = changed
+      if changed:
+        self.msg.append({'Updated': {'url': url, 'args': str(args)}})
     else:
       self.err = self._getMsg(resp)
       self.err.update({'url': url, 'args': str(args)})
 
-  def _doPost(self, url, args):
+  def _doPost(self, url, args, changed=True):
     resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
-    self._postResult(resp, url, args)
+    self._postResult(resp, url, args, changed)
 
   def _doGet(self, url, params):
     return self._getResult(self.session.get(self.apibase + url, params=params, headers=self.headers, verify=False))
@@ -57,7 +58,7 @@ class Unity:
   def stopSession(self):
     url = '/api/types/loginSessionInfo/action/logout'
     args = {'localCleanupOnly' : 'true'}
-    self._doPost(url, args)
+    self._doPost(url, args, changed=False)
 
   def acceptEULA(self):
     url = '/api/instances/system/0'
