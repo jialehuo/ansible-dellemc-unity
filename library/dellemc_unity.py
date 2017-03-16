@@ -19,25 +19,26 @@ class Unity:
     self.headers = {'X-EMC-REST-CLIENT': 'true', 'content-type': 'application/json', 'Accept': 'application/json'}       # HTTP headers for REST API requests, less the 'EMC-CSRF-TOKEN' header
     self.session = requests.Session()
     self.changed = False
-    self.msg = ''
+    self.msg = []
     self.err = None
 
   def _getMsg(self, resp):
-    return 'HTTP status code: ' + str(resp.status_code) + ', text: ' + resp.text
+    return {'status_code': resp.status_code, 'text': resp.text}
 
   def _getResult(self, resp):
     if resp.status_code // 100 == 2:	# HTTP status code 2xx = success
-      self.msg += self._getMsg(resp) + '. '
+      self.msg.append(self._getMsg(resp)) 
     else:
-      self.err = self._getMsg(resp) + '. '
+      self.err = self._getMsg(resp)
     return resp
 
   def _postResult(self, resp, url, args):
     if resp.status_code // 100 == 2:
       self.changed = True
-      self.msg += 'Updated: url=' + url + ', args=' + str(args) + '. '
+      self.msg.append({'Updated': {'url': url, 'args': str(args)}})
     else:
-      self.err = self._getMsg(resp) + ', url=' + url + ', args=' + str(args) + '. '
+      self.err = self._getMsg(resp)
+      self.err.update({'url': url, 'args': str(args)})
 
   def _doPost(self, url, args):
     resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
@@ -151,7 +152,8 @@ def main():
     unity = Unity(module)
     unity.update()
     if unity.err != None:
-      module.exit_json(failed=True, msg = unity.err)
+      unity.msg.append(unity.err)
+      module.exit_json(changed=unity.changed, failed=True, msg = unity.msg)
     else:
       module.exit_json(changed=unity.changed, msg=unity.msg)
 
