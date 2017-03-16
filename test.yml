@@ -2,11 +2,18 @@
 - hosts: localhost
   tasks:
     - name: Testing
-      dellemc_unity_init:
-        state: sync
-        force: yes
-        unity_username: admin
-        unity_password: Password123#
+      dellemc_unity:
         unity_hostname: "192.168.0.202"
+        unity_username: admin
+        unity_password: Password123!
+        unity_accept_eula: true
+        # unity_new_password: Password123!
+        # unity_license_path: /home/labadmin/unity.lic
+        unity_dns_servers:
+          - 10.254.66.25
+          - 10.254.66.26
+        unity_ntp_servers:
+          - 10.254.140.21
+          - 10.254.140.22
       register: result
     - debug: var=result
