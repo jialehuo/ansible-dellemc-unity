@@ -112,16 +112,22 @@ class Unity:
       params = {'fields':'id,name,role'}
       resp = self._doGet(url, params)
       if resp.status_code == 404:	# User not found
-        self.err = None			# Suppress the error and add the user instead
+        self.err = None			# Suppress the error and create the user instead
         self.createUser(user)
       if self.err:
         return
-      if 'new_password' in user:
+      if resp.status_code != 404:	# User already exists in the system
+        if 'password' in user:	# Verify existing user's password
+          r = requests.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(user['username'], user['password']), headers=self.headers, verify=False)
+          if r.status_code == 401: 	# Unauthorized password
+            self.err = {'status_code': r.status_code, 'text': 'User "' + user['username'] + '" is not authenticated because of wrong password'}
+            return
+          if 'role' in user:	# Only update existing user's role
+            self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
+          if self.err:
+            return
+      if 'new_password' in user:	# Update user's password. Newly created user's password can also be updated here.
         self.updateUserPassword(user['username'], user['password'], user['new_password'])
-      if self.err:
-        return
-      if 'role' in user and resp.status_code != 404:	# If the user didn't exist, it should have been created with the desired role already
-        self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
       if self.err:
         return
       self.processedUsers.append(user['username'])
