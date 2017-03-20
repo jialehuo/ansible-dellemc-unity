@@ -1,5 +1,6 @@
 ---
 - hosts: localhost
+  gather_facts: False 
   tasks:
     - name: Testing
       dellemc_unity:
@@ -9,6 +10,11 @@
         unity_accept_eula: true
         unity_new_password: Password123!
         unity_license_path: /home/labadmin/unity.lic
+        # A list of other users to create or update in the system. The module will fail attempts to update the 'admin' user through this parameter
+        unity_other_users:
+          - {username: test, password: Welcome1#}                            # Create the user with the default admininistrator role. If the user already exists, do nothing
+          - {username: test, password: Welcome1#, role: operator}       # Create the user with the operator role, or update the user to operator role. Initial roles in the system are: administrator, operator, storageadmin, vmadmin.
+          - {username: test, password: Welcome1#, new_password: Welcome1!}   # Create the user if it doesn't exist already, and then update the user's password 
         unity_dns_servers:
           - 10.254.66.25
           - 10.254.66.26

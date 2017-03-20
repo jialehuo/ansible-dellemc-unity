@@ -12,6 +12,7 @@ class Unity:
     self.acceptEula = module.params['unity_accept_eula']
     self.newPassword = module.params['unity_new_password']
     self.licensePath = module.params['unity_license_path']
+    self.otherUsers = module.params['unity_other_users']
     self.dnsServers = module.params['unity_dns_servers']
     self.ntpServers = module.params['unity_ntp_servers']
 
@@ -32,14 +33,14 @@ class Unity:
       self.err = self._getMsg(resp)
     return resp
 
-  def _postResult(self, resp, url, args, changed):
+  def _postResult(self, resp, url, args, changed=True):
     if resp.status_code // 100 == 2:
-      self.changed = changed
       if changed:
-        self.msg.append({'Updated': {'url': url, 'args': str(args)}})
+        self.changed = changed
+        self.msg.append({'Changed': {'url': url, 'args': args}})
     else:
       self.err = self._getMsg(resp)
-      self.err.update({'url': url, 'args': str(args)})
+      self.err.update({'url': url, 'args': args})
 
   def _doPost(self, url, args, changed=True):
     resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
@@ -71,11 +72,14 @@ class Unity:
         self._doPost(url, args)
 
   def updatePassword(self):
-    if self.password != self.newPassword:	# only update password if it is different from the existing one
-      url = '/api/instances/user/user_' + self.username + '/action/modify'
-      args = {'password':self.newPassword, 'oldPassword':self.password}
+    self.updateUserPassword(self.username, self.password, self.newPassword)
+    self.password = self.newPassword
+
+  def updateUserPassword(self, username, password, newPassword):
+    if password != newPassword:	# only update password if it is different from the existing one
+      url = '/api/instances/user/user_' + username + '/action/modify'
+      args = {'password':newPassword, 'oldPassword':password}
       self._doPost(url, args)
-      self.password = self.newPassword
 
   def uploadLicense(self):
     url = self.apibase + '/upload/license'
@@ -84,6 +88,42 @@ class Unity:
     resp = self.session.post(url, files = files, headers=headers, verify=False)
     self._postResult(resp, url, {'licensePath': self.licensePath})
 
+  def processOtherUsers(self):
+    for user in self.otherUsers:
+      if user['username'] == 'admin':
+        self.err = {'failure': 'The module cannot update user "admin" through the "unity_other_users" parameter'}
+        return
+      url = '/api/instances/user/user_' + user['username']
+      params = {'fields':'id,name,role'}
+      resp = self._doGet(url, params)
+      if resp.status_code == 404:	# User not found
+        self.err = None			# Suppress the error and add the user instead
+        self.createUser(user)
+      if self.err:
+        return
+      if 'new_password' in user:
+        self.updateUserPassword(user['username'], user['password'], user['new_password'])
+      if self.err:
+        return
+      if 'role' in user:
+        self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
+      if self.err:
+        return
+
+  def updateUserRole(self, username, role, newRole):
+    if role != newRole:
+      url = '/api/instances/user/user_' + username + '/action/modify'
+      args = {'role': newRole}
+      self._doPost(url, args)
+
+  def createUser(self, user):
+    url = '/api/types/user/instances'
+    role = 'administrator'	# default role
+    if 'role' in user:
+      role = user['role']
+    args = {'name': user['username'], 'role': role, 'password': user['password']}
+    self._doPost(url, args)
+    
   def updateDnsServers(self):
     url = '/api/instances/dnsServer/0'
     params = {'fields':'addresses,domain,origin'}
@@ -106,32 +146,37 @@ class Unity:
   
   def update(self):
     self.startSession()
-    if self.err != None:
+    if self.err:
       return
       
     if self.acceptEula:
       self.acceptEULA()
-      if self.err != None:
+      if self.err:
         return
       
     if self.newPassword:
       self.updatePassword()
-      if self.err != None:
+      if self.err:
         return
 
     if self.licensePath:
       self.uploadLicense()
-      if self.err != None:
+      if self.err:
+        return
+
+    if self.otherUsers:
+      self.processOtherUsers()
+      if self.err:
         return
 
     if self.dnsServers:
       self.updateDnsServers()
-      if self.err != None:
+      if self.err:
         return
 
     if self.ntpServers:
       self.updateNtpServers()
-      if self.err != None:
+      if self.err:
         return
 
     self.stopSession()
@@ -145,6 +190,7 @@ def main():
             unity_accept_eula=dict(default=None, type='bool'),
             unity_new_password = dict(default=None, type='str', no_log=True),
             unity_license_path = dict(default=None, type='path'),
+            unity_other_users = dict(default=None, type='list'),
             unity_dns_servers = dict(default=None, type='list'),
             unity_ntp_servers = dict(default=None, type='list')
         )
@@ -152,7 +198,7 @@ def main():
 
     unity = Unity(module)
     unity.update()
-    if unity.err != None:
+    if unity.err:
       unity.msg.append(unity.err)
       module.exit_json(changed=unity.changed, failed=True, msg = unity.msg)
     else:
