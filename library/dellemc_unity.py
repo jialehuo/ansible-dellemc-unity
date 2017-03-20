@@ -58,9 +58,16 @@ class Unity:
   def _doGet(self, url, params):
     return self._getResult(self.session.get(self.apibase + url, params=params, headers=self.headers, verify=False))
 
+  def processAuthResult(self, resp, username):
+    self._getResult(resp)
+    if self.err: 	
+      if resp.status_code == 401:	# Unauthorized password
+        self.err['text'] = 'User "' + username + '" is not authenticated because of wrong password'	# Update error message
+    return resp
+
   def startSession(self):
     resp = self.session.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(self.username, self.password), headers=self.headers, verify=False)
-    self._getResult(resp)
+    self.processAuthResult(resp, self.username)
     if resp.status_code // 100 == 2:	# 2xx status code - success
       # Add 'EMC-CSRF-TOKEN' header
       self.headers['EMC-CSRF-TOKEN']=resp.headers['EMC-CSRF-TOKEN']
@@ -119,13 +126,13 @@ class Unity:
       if resp.status_code != 404:	# User already exists in the system
         if 'password' in user:	# Verify existing user's password
           r = requests.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(user['username'], user['password']), headers=self.headers, verify=False)
-          if r.status_code == 401: 	# Unauthorized password
-            self.err = {'status_code': r.status_code, 'text': 'User "' + user['username'] + '" is not authenticated because of wrong password'}
-            return
-          if 'role' in user:	# Only update existing user's role
-            self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
-          if self.err:
-            return
+          self.processAuthResult(r, user['username'])
+        if self.err:
+          return
+        if 'role' in user:	# Only update existing user's role
+          self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
+        if self.err:
+          return
       if 'new_password' in user:	# Update user's password. Newly created user's password can also be updated here.
         self.updateUserPassword(user['username'], user['password'], user['new_password'])
       if self.err:
