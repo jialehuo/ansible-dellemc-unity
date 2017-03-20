@@ -15,7 +15,9 @@ class Unity:
     self.otherUsers = module.params['unity_other_users']
     self.dnsServers = module.params['unity_dns_servers']
     self.ntpServers = module.params['unity_ntp_servers']
+    self.checkMode = module.check_mode
 
+    self.processedUsers = []
     self.apibase = 'https://' + self.hostname	# Base URL of the REST API
     self.headers = {'X-EMC-REST-CLIENT': 'true', 'content-type': 'application/json', 'Accept': 'application/json'}       # HTTP headers for REST API requests, less the 'EMC-CSRF-TOKEN' header
     self.session = requests.Session()
@@ -34,16 +36,23 @@ class Unity:
     return resp
 
   def _postResult(self, resp, url, args, changed=True):
-    if resp.status_code // 100 == 2:
+    changedTxt = 'Changed'
+    if self.checkMode:
+      changedTxt = 'To be changed'
+
+    if self.checkMode or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
-        self.msg.append({'Changed': {'url': url, 'args': args}})
+        self.msg.append({changedTxt: {'url': url, 'args': args}})
     else:
       self.err = self._getMsg(resp)
       self.err.update({'url': url, 'args': args})
 
   def _doPost(self, url, args, changed=True):
-    resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
+    if self.checkMode:
+      resp = None
+    else:
+      resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
     self._postResult(resp, url, args, changed)
 
   def _doGet(self, url, params):
@@ -83,15 +92,21 @@ class Unity:
 
   def uploadLicense(self):
     url = self.apibase + '/upload/license'
-    files = {'upload': open(self.licensePath, 'rb')}
-    headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
-    resp = self.session.post(url, files = files, headers=headers, verify=False)
+    if self.checkMode:
+      resp = None
+    else:
+      files = {'upload': open(self.licensePath, 'rb')}
+      headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
+      resp = self.session.post(url, files = files, headers=headers, verify=False)
     self._postResult(resp, url, {'licensePath': self.licensePath})
 
   def processOtherUsers(self):
     for user in self.otherUsers:
       if user['username'] == 'admin':
         self.err = {'failure': 'The module cannot update user "admin" through the "unity_other_users" parameter'}
+        return
+      if user['username'] in self.processedUsers:
+        self.err = {'failure': 'User "' + user['username'] +'" is defined more than once in the "unity_other_users" list'}
         return
       url = '/api/instances/user/user_' + user['username']
       params = {'fields':'id,name,role'}
@@ -105,10 +120,11 @@ class Unity:
         self.updateUserPassword(user['username'], user['password'], user['new_password'])
       if self.err:
         return
-      if 'role' in user:
+      if 'role' in user and resp.status_code != 404:	# If the user didn't exist, it should have been created with the desired role already
         self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
       if self.err:
         return
+      self.processedUsers.append(user['username'])
 
   def updateUserRole(self, username, role, newRole):
     if role != newRole:
@@ -193,7 +209,8 @@ def main():
             unity_other_users = dict(default=None, type='list'),
             unity_dns_servers = dict(default=None, type='list'),
             unity_ntp_servers = dict(default=None, type='list')
-        )
+        ),
+        supports_check_mode=True
     )
 
     unity = Unity(module)
