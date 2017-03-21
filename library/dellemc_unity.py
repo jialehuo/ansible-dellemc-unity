@@ -132,7 +132,7 @@ class Unity:
         m = r.search(line)
         if m:
           if m.group('new_version') > version:
-            self.msg.append({'License update for ' + id: 'version ' + version + ' upgraded to version ' + m.group('new_version')})
+            self.msg.append({'License update for ' + id: 'version ' + version + ' to version ' + m.group('new_version')})
             return True
     return False
 
