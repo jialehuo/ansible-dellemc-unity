@@ -32,7 +32,8 @@ class Unity:
 
   def _getResult(self, resp):
     if resp.status_code // 100 == 2:	# HTTP status code 2xx = success
-      self.msg.append(self._getMsg(resp)) 
+      pass
+      # self.msg.append(self._getMsg(resp)) 
     else:
       self.err = self._getMsg(resp)
     return resp
@@ -107,10 +108,12 @@ class Unity:
     if resp.status_code // 100 == 2:
       if 'entries' in json.loads(resp.text):
         for entry in json.loads(resp.text)['entries']:
-          if 'content' in entry and 'isInstalled' in entry['content'] and entry['content']['isInstalled']:
-            isUpdate = isUpdate or self.isLicenseUpdate(self.licensePath, entry['content']['id'], entry['content']['version'])
-          elif 'content' in entry:
-            isUpdate = isUpdate or self.isLicenseUpdate(self.licensePath, entry['content']['id'])
+          if 'content' in entry:
+            if 'isInstalled' in entry['content'] and entry['content']['isInstalled']:
+              version = entry['content']['version']
+            else:
+              version = '0'
+            isUpdate = self.isLicenseUpdate(self.licensePath, entry['content']['id'], version) or isUpdate 
 
     if isUpdate:
       url = self.apibase + '/upload/license'
@@ -248,7 +251,7 @@ def main():
             unity_other_users = dict(default=None, type='list'),
             unity_dns_servers = dict(default=None, type='list'),
             unity_ntp_servers = dict(default=None, type='list'),
-            unity_ntp_reboot_privilege = dict(default=None, type='int')
+            unity_ntp_reboot_privilege = dict(default=0, type='int')
         ),
         supports_check_mode=True
     )

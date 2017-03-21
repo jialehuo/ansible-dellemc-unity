@@ -21,5 +21,6 @@
         unity_ntp_servers:
           - 10.254.140.21
           - 10.254.140.22
+        unity_ntp_reboot_privilege: 2   #  RebootPrivilegeEnum: 0 = No_Reboot_Allowed, Set time or NTP server if possible without a reboot; 1 = Reboot_Allowed, Set time or NTP server if possible; reboot if needed, but do not allow data unavailability; 2 = DU_Allowed, Set time or NTP server if possible; reboot if needed, even if this will cause data unavailability. If the Unity system time is more than 1000 seconds apart from the NTP servers, then a forced reboot with flag 2 = DU_Allowed is required.
       register: result
     - debug: var=result
