@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import requests, json
+import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 
 class Unity:
@@ -15,6 +15,8 @@ class Unity:
     self.otherUsers = module.params['unity_other_users']
     self.dnsServers = module.params['unity_dns_servers']
     self.ntpServers = module.params['unity_ntp_servers']
+    self.ntpRebootPrivilege = module.params['unity_ntp_reboot_privilege']
+
     self.checkMode = module.check_mode
 
     self.processedUsers = []
@@ -98,14 +100,38 @@ class Unity:
       self._doPost(url, args)
 
   def uploadLicense(self):
-    url = self.apibase + '/upload/license'
-    if self.checkMode:
-      resp = None
-    else:
-      files = {'upload': open(self.licensePath, 'rb')}
-      headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
-      resp = self.session.post(url, files = files, headers=headers, verify=False)
-    self._postResult(resp, url, {'licensePath': self.licensePath})
+    isUpdate = False
+    url = '/api/types/license/instances'
+    params = {'fields': 'id, name, isInstalled, version, isValid, issued, expires, isPermanent'}
+    resp = self._doGet(url, params)
+    if resp.status_code // 100 == 2:
+      if 'entries' in json.loads(resp.text):
+        for entry in json.loads(resp.text)['entries']:
+          if 'content' in entry and 'isInstalled' in entry['content'] and entry['content']['isInstalled']:
+            isUpdate = isUpdate or self.isLicenseUpdate(self.licensePath, entry['content']['id'], entry['content']['version'])
+          elif 'content' in entry:
+            isUpdate = isUpdate or self.isLicenseUpdate(self.licensePath, entry['content']['id'])
+
+    if isUpdate:
+      url = self.apibase + '/upload/license'
+      if self.checkMode:
+        resp = None
+      else:
+        files = {'upload': open(self.licensePath, 'rb')}
+        headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
+        resp = self.session.post(url, files = files, headers=headers, verify=False)
+      self._postResult(resp, url, {'licensePath': self.licensePath})
+
+  def isLicenseUpdate(self, licensePath, id, version='0'):
+    r = re.compile('^INCREMENT ' + id + ' EMCLM ' + '(?P<new_version>\d+\.?\d*)')
+    with open(licensePath, 'r') as f:
+      for line in f:
+        m = r.search(line)
+        if m:
+          if m.group('new_version') > version:
+            self.msg.append({'License update for ' + id: 'version ' + version + ' upgraded to version ' + m.group('new_version')})
+            return True
+    return False
 
   def processOtherUsers(self):
     for user in self.otherUsers:
@@ -170,7 +196,7 @@ class Unity:
     if resp.status_code == 200:
       if json.loads(resp.text)['content']['addresses'] != self.ntpServers: 	# only update NTP servers if they are different from the currently ones
         url = '/api/instances/ntpServer/0/action/modify'
-        args = {'addresses': self.ntpServers, 'rebootPrivilege': 2}
+        args = {'addresses': self.ntpServers, 'rebootPrivilege': self.ntpRebootPrivilege}
         return self._doPost(url, args)
   
   def update(self):
@@ -221,7 +247,8 @@ def main():
             unity_license_path = dict(default=None, type='path'),
             unity_other_users = dict(default=None, type='list'),
             unity_dns_servers = dict(default=None, type='list'),
-            unity_ntp_servers = dict(default=None, type='list')
+            unity_ntp_servers = dict(default=None, type='list'),
+            unity_ntp_reboot_privilege = dict(default=None, type='int')
         ),
         supports_check_mode=True
     )
