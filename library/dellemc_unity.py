@@ -1,5 +1,148 @@
 #!/usr/bin/python
 
+ANSIBLE_METADATA = {'metadata_version': '1.0',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
+
+DOCUMENTATION = ''' 
+---
+module: dellemc_unity
+short_description: Configure and manage Dell EMC Unity Storage System
+description:
+    - This module can be use d to configure and manage Dell EMC Unity Storage System.
+    - The module supports check mode.
+version_added: "2.2"
+author: 
+    - "Jiale Huo (jiale.huo@emc.com)"
+    - "Craig Smith (craig.j.smith@emc.com)"
+options:
+    unity_hostname:
+        description: 
+            - Hostname of the Unity system's management interface.
+        required: true 
+        type: string
+    unity_username:
+        description: 
+            - Username of the Unity system's default administrator user.
+        required: false
+        default: "admin"
+        type: string
+    unity_password:
+        description: 
+            - Password of the Unity system's default administrator user.
+        required: false
+        default: "Password123#"
+        type: string
+    unity_accept_eula:
+        description:
+            - Indicate whether the administrator accepts the EULA of the Unity system.
+        required: false
+        default: False
+        type: bool
+    unity_new_password:
+        description: 
+            - New password to replace the old one of the Unity system's default administrator user.
+        required: false
+        type: string
+    unity_license_path:
+        description:
+            - Path to the license file of the Unity system.
+        required: false
+        type: string
+    unity_other_users:
+        description:
+            - Create or update users of the Unity system other than the default administrator user.
+        required: false
+        type: list
+        suboptions:
+            username: 
+                description:
+                    - Username of the user.
+                required: true
+                type: string
+            password:
+                description:
+                    - Password of the user.
+                required: true
+                type: string
+            new_password:
+                description:
+                    - New password to replace the old one of the user.
+                required: false
+                type: string
+            role:
+                description:
+                    - Role of the user in the Unity system.
+                required: false
+                default: "administrator"
+                choices:
+                    - administrator
+                    - operator
+                    - storageadmin
+                    - vmadmin
+                type: string
+    unity_dns_servers:
+        description:
+            - Update DNS servers of the Unity system.
+        required: false
+        type: list
+    unity_ntp_servers:
+        description:
+            - Update NTP servers of the Unity system.
+        required: false
+        type: list
+    unity_ntp_reboot_privilege:
+        description:
+            - Option to reboot the Unity system when updating NTP servers.
+            - Reboot for a time change is required only if the time shift exceeds a threshold of 1000 seconds. 
+            - If a reboot is required, and allowed, on a single SP system or a system with only one SP operating, then clients will be unable to access data during the reboot. 
+        required: false
+        default: 0
+        choices:
+            - 0 = No_Reboot_Allowed: Set time or NTP server if possible without a reboot.
+            - 1 = Reboot_Allowed: Set time or NTP server if possible; reboot if needed, but do not allow data unavailability.
+            - 2 = DU_Allowed: Set time or NTP server if possible; reboot if needed, even if this will cause data unavailability.
+        type: int
+notes:
+    - GitHub project: U(https://github.com/jialehuo/ansible-dellemc-unity)
+    - This module supports check mode.
+requirements:
+    - Python >= 2.7
+    - requests >= 1.3
+    - Unity >= 4.0
+'''
+
+EXAMPLES = '''
+- name: Initial setup
+  dellemc_unity:
+    unity_hostname: "192.168.0.100"
+    unity_username: admin
+    unity_password: Password123#
+    unity_accept_eula: true
+    unity_new_password: Password123!
+    unity_license_path: /home/labadmin/unity.lic
+    unity_other_users:
+      - {username: test1, password: Welcome1!} 
+      - {username: test2, password: Welcome1!, role: operator}
+    unity_dns_servers:
+      - 10.10.0.21
+      - 10.10.0.22
+    unity_ntp_servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+    unity_ntp_reboot_privilege: 2
+
+- name: Update user password
+  dellemc_unity:
+    unity_hostname: "192.168.0.100"
+    unity_password: Password123!
+    unity_other_users:
+      - {username: test1, password: Welcome1!, new_password: Welcome123!} 
+'''
+
+RETURN = '''
+'''
+
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 
@@ -243,9 +386,9 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             unity_hostname=dict(default=None, required=True, type='str'),
-            unity_username=dict(default=None, required=True, type='str'),
-            unity_password=dict(default=None, required=True, type='str', no_log=True),
-            unity_accept_eula=dict(default=None, type='bool'),
+            unity_username=dict(default='admin', type='str'),
+            unity_password=dict(default='Password123#', type='str', no_log=True),
+            unity_accept_eula=dict(default=False, type='bool'),
             unity_new_password = dict(default=None, type='str', no_log=True),
             unity_license_path = dict(default=None, type='path'),
             unity_other_users = dict(default=None, type='list'),
