@@ -103,6 +103,99 @@ options:
             - 1 = Reboot_Allowed: Set time or NTP server if possible; reboot if needed, but do not allow data unavailability.
             - 2 = DU_Allowed: Set time or NTP server if possible; reboot if needed, even if this will cause data unavailability.
         type: int
+    unity_queries:
+        description:
+            - Query the Unity system for resource information.
+            - See "Unisphere Management REST API Programmer's Guide" for detailed description and examples of the query parameters.
+        required: false
+        type: list
+        suboptions:
+            resource_type: 
+                description:
+                    - Type of the resource to be queried.
+                required: true
+                type: string
+            id:
+                description:
+                    - ID of an instance of the resouce type to be queried.
+                    - If this option is missing, then collection query of the resource type will be executed.
+                    - Otherwise, if this option is present, then instance query of the resource type will be executed. 
+                required: false
+                type: string
+            compact:
+                description:
+                    - Omits metadata from each instance in the query response.
+                required: false
+                default: true
+                type: bool
+            fields:
+                description:
+                    - Specifies a comma-separated list of attributes to return in a response. 
+                    - If you do not use this parameter, a query will return the id attribute only.
+                    - When using fields, you can:
+                        - Use dot notation syntax to return the values of related attributes.
+                        - Optionally, define a new attribute from field expressions associated with one or more existing attributes.
+                required: false
+                type: string
+            filter:
+                description:
+                    - Filters the response data against a set of criteria. Only matching resource instances are returned. Filtering is case insensitive.
+                    - When using filter, you can use dot notation syntax to filter by the attributes of related resource types.
+                    - Only applies to collection query requests.
+                required: false
+                type: string
+            groupby:
+                description:
+                    - Groups the specified values and applies the @sum function to each group.
+                    - For example, you could use groupby with @sum to return a summary of disk sizes for each disk type.
+                    - Only applies to collection query requests.
+                required: false
+                type: string
+            language:
+                description:
+                    - Overrides the value of the Accept-language: header.
+                    - This is useful for testing from a plain browser or from an environment where URL parameters are easier to use than HTTP headers.
+                    - The language parameter specifies the localization language for error messages, events, alerts, and other localizable responses.
+                required: false
+                choices:
+                    - de-DE: German
+                    - en-US: English 
+                    - es-MX: Latin American Spanish
+                    - fr-FR: French
+                    - ja-JP: Japanese
+                    - ko-KR: Korean
+                    - pt-BR: Brazilian Portuguese
+                    - ru-RU: Russian
+                    - zh-CN: Chinese
+                default: en-US
+                type: string
+            orderby:
+                description:
+                    - Specifies how to sort response data. You can sort response data in ascending or descending order by the attributes of the queried resource type. And you can use dot notation syntax to sort response data by the attributes of related resource types.
+                    - Only applies to collection query requests.
+                required: false
+                type: string
+            page:
+                description:
+                    - Identifies the page to return in a response by specifying the page number. If this parameter is not specified, the server returns all resource instances that meet the request criteria in page 1.
+                    - Only applies to collection query requests.
+                required: false
+                type: int
+            per_page:
+                description:
+                    - Specifies the number of resource type instances that form a page. If this parameter is not specified, the server returns all resource instances that meet the request criteria in the page specified by page (or in page 1, if page is also not specified).
+                    - The server imposes an upper limit of 2000 on the number of resource instances returned in a page.
+                    - Only applies to collection query requests.
+                required: false
+                type: int
+            with_entrycount:
+                description:
+                    - Indicates whether to return the entryCount response component in the response data. The entryCount response component indicates the number of resource instances in the complete list. You can use it to get the total number of entries when paging returned a partial response.
+                    - By default, the entryCount response component is not returned. Set with_entrycount=true to return the entryCount response component.
+                    - Only applies to collection query requests.
+                required: false
+                default: true
+                type: bool
 notes:
     - GitHub project: U(https://github.com/jialehuo/ansible-dellemc-unity)
     - This module supports check mode.
@@ -138,9 +231,241 @@ EXAMPLES = '''
     unity_password: Password123!
     unity_other_users:
       - {username: test1, password: Welcome1!, new_password: Welcome123!} 
+
+- name: Query DNS and NTP server settings
+  dellemc_unity:
+    unity_hostname: "192.168.0.100"
+    unity_password: Password123!
+    unity_queries:
+        - {resource_type: dnsServer, fields: "domain, addresses, origin", page: 1, per_page: 100}
+        - {resource_type: ntpServer, id: "0", fields: addresses}
 '''
 
 RETURN = '''
+unity_update_results:
+    description: 
+        - A list of JSON objects detailing the results of each successful update operation.
+    returned: always
+    type: list
+    sample: >
+        "unity_query_results": [
+            {
+                "entries": [
+                    {
+                        "content": {
+                            "addresses": [
+                                "10.254.66.23", 
+                                "10.254.66.24"
+                            ], 
+                            "id": "0", 
+                            "origin": 2
+                        }
+                    }
+                ], 
+                "entryCount": 1, 
+                "resource_type": "dnsServer"
+            }, 
+            {
+                "entries": [
+                    {
+                        "content": {
+                            "addresses": [], 
+                            "id": "0"
+                        }
+                    }
+                ], 
+                "entryCount": 1, 
+                "resource_type": "ntpServer"
+            }
+        ]
+    contains:
+        entries:
+            description:
+                - A list of JSON objects for each instance of the resource type returned by the query.
+            returned: always
+            type: complex
+            contains:
+                content:
+                    description: 
+                        - Content of the instance.
+                        - Contains at least the ID of the instance, and possibly other fields specified by the 'fields' parameter in the 'unity_queries' option.
+                    returned: always
+                    type: complex
+        entryCount:
+            description:
+                - Count of entries returned.
+            type: int
+        resourceType:
+            description:
+                - Type of the resource returned.
+            returned: always
+            type: string
+
+unity_query_results:
+    description: 
+        - A list of JSON objects detailing the results of each successful query operation.
+    returned: always
+    type: list
+    sample: >
+        "unity_update_results": [
+            {
+                "changed": {
+                    "args": {
+                        "isEulaAccepted": "true"
+                    }, 
+                    "url": "/api/instances/system/0/action/modify"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "oldPassword": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER", 
+                        "password": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER"
+                    }, 
+                    "url": "/api/instances/user/user_admin/action/modify"
+                }
+            }, 
+            {
+                "ANTIVIRUS_license_update": "version 0 to version 1"
+            }, 
+            {
+                "BASE_OE_V4_0_license_update": "version 0 to version 1"
+            }, 
+            {
+                "CIFS_license_update": "version 0 to version 1"
+            }, 
+            {
+                "ESA_ADAPTER_license_update": "version 0 to version 1"
+            }, 
+            {
+                "FAST_VP_license_update": "version 0 to version 1"
+            }, 
+            {
+                "ISCSI_license_update": "version 0 to version 1"
+            }, 
+            {
+                "LOCAL_COPIES_license_update": "version 0 to version 1"
+            }, 
+            {
+                "NFS_license_update": "version 0 to version 1"
+            }, 
+            {
+                "QUALITY_OF_SERVICE_license_update": "version 0 to version 1"
+            }, 
+            {
+                "THIN_PROVISIONING_license_update": "version 0 to version 1"
+            }, 
+            {
+                "UNISPHERE_license_update": "version 0 to version 1"
+            }, 
+            {
+                "UNISPHERE_CENTRAL_license_update": "version 0 to version 1"
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "licensePath": "/home/labadmin/unity.lic"
+                    }, 
+                    "url": "https://192.168.0.202/upload/license"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "name": "test1", 
+                        "password": "Welcome1!", 
+                        "role": "administrator"
+                    }, 
+                    "url": "/api/types/user/instances"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "name": "test2", 
+                        "password": "Welcome1!", 
+                        "role": "operator"
+                    }, 
+                    "url": "/api/types/user/instances"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "name": "test3", 
+                        "password": "Welcome1!", 
+                        "role": "administrator"
+                    }, 
+                    "url": "/api/types/user/instances"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "oldPassword": "Welcome1!", 
+                        "password": "Welcome1#"
+                    }, 
+                    "url": "/api/instances/user/user_test3/action/modify"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "addresses": [
+                            "10.254.66.25", 
+                            "10.254.66.26"
+                        ]
+                    }, 
+                    "url": "/api/instances/dnsServer/0/action/modify"
+                }
+            }, 
+            {
+                "changed": {
+                    "args": {
+                        "addresses": [
+                            "10.254.140.21", 
+                            "10.254.140.22"
+                        ], 
+                        "rebootPrivilege": 2
+                    }, 
+                    "url": "/api/instances/ntpServer/0/action/modify"
+                }
+            }
+        ]
+    contains:
+        changed:
+            description:
+                - Resources changed in the Unity system.
+                - Returned under non-check mode.
+            type: complex
+            contains:
+                url:
+                    description:
+                        - URL of the operation to change the resource.
+                    returned: always
+                    type: string
+                args:
+                    description:
+                        - Arguments of the operation to change the resource.
+                    returned: always
+                    type: complex
+        to_be_changed:
+            description:
+                - Resources to be changed in the Unity system.
+                - Returned under check mode.
+            type: complex
+            contains:
+                url:
+                    description:
+                        - URL of the operation to change the resource.
+                    returned: always
+                    type: string
+                args:
+                    description:
+                        - Arguments of the operation to change the resource.
+                    returned: always
+                    type: complex
+
 '''
 
 import requests, json, re
@@ -159,6 +484,7 @@ class Unity:
     self.dnsServers = module.params['unity_dns_servers']
     self.ntpServers = module.params['unity_ntp_servers']
     self.ntpRebootPrivilege = module.params['unity_ntp_reboot_privilege']
+    self.queries = module.params['unity_queries']
 
     self.checkMode = module.check_mode
 
@@ -167,29 +493,33 @@ class Unity:
     self.headers = {'X-EMC-REST-CLIENT': 'true', 'content-type': 'application/json', 'Accept': 'application/json'}       # HTTP headers for REST API requests, less the 'EMC-CSRF-TOKEN' header
     self.session = requests.Session()
     self.changed = False
-    self.msg = []
+    self.updateResults = []
+    self.queryResults = []
     self.err = None
 
   def _getMsg(self, resp):
-    return {'status_code': resp.status_code, 'text': resp.text}
+    try:
+      msg = json.loads(resp.text)
+    except ValueError:
+      msg = {'httpStatusCode': resp.status_code, 'messages': [{'en-US': resp.text}]}
+    return msg
 
   def _getResult(self, resp):
     if resp.status_code // 100 == 2:	# HTTP status code 2xx = success
       pass
-      # self.msg.append(self._getMsg(resp)) 
     else:
       self.err = self._getMsg(resp)
     return resp
 
   def _postResult(self, resp, url, args, changed=True):
-    changedTxt = 'Changed'
+    changedTxt = 'changed'
     if self.checkMode:
-      changedTxt = 'To be changed'
+      changedTxt = 'to_be_changed'
 
     if self.checkMode or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
-        self.msg.append({changedTxt: {'url': url, 'args': args}})
+        self.updateResults.append({changedTxt: {'url': url, 'args': args}})
     else:
       self.err = self._getMsg(resp)
       self.err.update({'url': url, 'args': args})
@@ -199,7 +529,7 @@ class Unity:
       resp = None
     else:
       resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
-    self._postResult(resp, url, args, changed)
+    self._postResult(resp, url, args, changed=changed)
 
   def _doGet(self, url, params):
     return self._getResult(self.session.get(self.apibase + url, params=params, headers=self.headers, verify=False))
@@ -208,7 +538,7 @@ class Unity:
     self._getResult(resp)
     if self.err: 	
       if resp.status_code == 401:	# Unauthorized password
-        self.err['text'] = 'User "' + username + '" is not authenticated because of wrong password'	# Update error message
+        self.err['messages'][0]['en-US'] = "Authentication error for User '" + username + "'" 	# Update error message
     return resp
 
   def startSession(self):
@@ -275,17 +605,17 @@ class Unity:
         m = r.search(line)
         if m:
           if m.group('new_version') > version:
-            self.msg.append({'License update for ' + id: 'version ' + version + ' to version ' + m.group('new_version')})
+            self.updateResults.append({id + '_license_update': 'version ' + version + ' to version ' + m.group('new_version')})
             return True
     return False
 
   def processOtherUsers(self):
     for user in self.otherUsers:
       if user['username'] == 'admin':
-        self.err = {'failure': 'The module cannot update user "admin" through the "unity_other_users" parameter'}
+        self.err = {'error': 'The module cannot update user "admin" through the "unity_other_users" parameter'}
         return
       if user['username'] in self.processedUsers:
-        self.err = {'failure': 'User "' + user['username'] +'" is defined more than once in the "unity_other_users" list'}
+        self.err = {'error': 'User "' + user['username'] +'" is defined more than once in the "unity_other_users" list'}
         return
       url = '/api/instances/user/user_' + user['username']
       params = {'fields':'id,name,role'}
@@ -344,8 +674,41 @@ class Unity:
         url = '/api/instances/ntpServer/0/action/modify'
         args = {'addresses': self.ntpServers, 'rebootPrivilege': self.ntpRebootPrivilege}
         return self._doPost(url, args)
+
+  def runQueries(self):
+    for query in self.queries:
+      if not 'resource_type' in query:	# A query must have the "resource_type" parameter
+        self.err = {'error': 'Query has no "resource_type" parameter', 'query': query}
+        return
+      instanceKeys = ['compact', 'fields', 'language']	# Instance query keys
+      collectionKeys = ['compact', 'fields', 'filter', 'groupby', 'language', 'orderby', 'page', 'per_page', 'with_entrycount']	# Collection query keys
+      if 'id' in query:
+        url = '/api/instances/' + query['resource_type'] + '/' + query['id']
+        paramKeys = instanceKeys
+      else:
+        url = '/api/types/' + query['resource_type'] + '/instances'
+        paramKeys = collectionKeys
+      params = {key: query[key] for key in paramKeys if key in query}	# dictioanry comprehension to create a sub-dictioanry from the query with only keys in paramKeys
+      if 'compact' not in params:
+        params['compact'] = 'true'	# By default, omit metadata from each instance in the query response
+      if 'id' not in query and 'with_entrycount' not in params:	# Collection query without the 'with_entrycount' parameter
+        params['with_entrycount'] = 'true'	# By default, return the entryCount response component in the response data.
+      resp = self._doGet(url, params)
+      if self.err:
+        return
+      else:
+        r = json.loads(resp.text)
+        result = {'resourceType': query['resource_type']}
+        if 'id' in query:
+          result['entries'] = [r]
+          result['entryCount'] = 1
+        else:
+          result['entries'] = r['entries']
+          if 'entryCount' in r:
+            result['entryCount'] = r['entryCount']
+        self.queryResults.append(result) 
   
-  def update(self):
+  def run(self):
     self.startSession()
     if self.err:
       return
@@ -380,6 +743,11 @@ class Unity:
       if self.err:
         return
 
+    if self.queries:
+      self.runQueries()
+      if self.err:
+        return
+
     self.stopSession()
 
 def main():
@@ -394,18 +762,18 @@ def main():
             unity_other_users = dict(default=None, type='list'),
             unity_dns_servers = dict(default=None, type='list'),
             unity_ntp_servers = dict(default=None, type='list'),
-            unity_ntp_reboot_privilege = dict(default=0, type='int')
+            unity_ntp_reboot_privilege = dict(default=0, type='int', choices=[0,1,2]),
+            unity_queries = dict(default=None, type='list')
         ),
         supports_check_mode=True
     )
 
     unity = Unity(module)
-    unity.update()
+    unity.run()
     if unity.err:
-      unity.msg.append(unity.err)
-      module.exit_json(changed=unity.changed, failed=True, msg = unity.msg)
+      module.fail_json(changed=unity.changed, msg = unity.err, unity_update_results = unity.updateResults, unity_query_results = unity.queryResults)
     else:
-      module.exit_json(changed=unity.changed, msg=unity.msg)
+      module.exit_json(changed=unity.changed, unity_update_results = unity.updateResults, unity_query_results = unity.queryResults)
 
 if __name__ == '__main__':
     main()
