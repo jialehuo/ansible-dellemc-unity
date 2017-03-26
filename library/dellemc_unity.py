@@ -4,7 +4,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
-DOCUMENTATION = ''' 
+DOCUMENTATION = '''
 ---
 module: dellemc_unity
 short_description: Configure and manage Dell EMC Unity Storage System
@@ -12,23 +12,23 @@ description:
     - This module can be use d to configure and manage Dell EMC Unity Storage System.
     - The module supports check mode.
 version_added: "2.2"
-author: 
+author:
     - "Jiale Huo (jiale.huo@emc.com)"
     - "Craig Smith (craig.j.smith@emc.com)"
 options:
     unity_hostname:
-        description: 
+        description:
             - Hostname of the Unity system's management interface.
-        required: true 
+        required: true
         type: string
     unity_username:
-        description: 
+        description:
             - Username of the Unity system's default administrator user.
         required: false
         default: "admin"
         type: string
     unity_password:
-        description: 
+        description:
             - Password of the Unity system's default administrator user.
         required: false
         default: "Password123#"
@@ -40,7 +40,7 @@ options:
         default: False
         type: bool
     unity_new_password:
-        description: 
+        description:
             - New password to replace the old one of the Unity system's default administrator user.
         required: false
         type: string
@@ -55,7 +55,7 @@ options:
         required: false
         type: list
         suboptions:
-            username: 
+            username:
                 description:
                     - Username of the user.
                 required: true
@@ -91,11 +91,42 @@ options:
             - Update NTP servers of the Unity system.
         required: false
         type: list
+    unity_syslog_enabled:
+        description:
+            - Enable/Disable Remote Syslog of the Unity system.
+        required: false
+        type: bool
+    unity_syslog_server:
+        description:
+            - Update the Remote Syslog Server of the Unity system.
+        required: false
+        type: string
+    unity_syslog_protocol:
+        description:
+            - Update the Remote Syslog Protocol of the Unity system.
+        required: false
+        type: int
+        default = 0
+        choices:
+            - 0 = udp
+            - 1 = tcp
+            - 3 = Vendor_Specific
+            - 4 = Other
+    unity_syslog_loglevel:
+        description:
+            - Update the Remote Syslog Log Level (Facility) of the Unity system.
+        required: false
+        type: int
+        default = 1
+        choices:
+            - 0 = Kernel Messages
+            - 1 = User-Level Messages
+            - 5 = Messages Generated Internally by syslogd
     unity_ntp_reboot_privilege:
         description:
             - Option to reboot the Unity system when updating NTP servers.
-            - Reboot for a time change is required only if the time shift exceeds a threshold of 1000 seconds. 
-            - If a reboot is required, and allowed, on a single SP system or a system with only one SP operating, then clients will be unable to access data during the reboot. 
+            - Reboot for a time change is required only if the time shift exceeds a threshold of 1000 seconds.
+            - If a reboot is required, and allowed, on a single SP system or a system with only one SP operating, then clients will be unable to access data during the reboot.
         required: false
         default: 0
         choices:
@@ -110,7 +141,7 @@ options:
         required: false
         type: list
         suboptions:
-            resource_type: 
+            resource_type:
                 description:
                     - Type of the resource to be queried.
                 required: true
@@ -119,7 +150,7 @@ options:
                 description:
                     - ID of an instance of the resouce type to be queried.
                     - If this option is missing, then collection query of the resource type will be executed.
-                    - Otherwise, if this option is present, then instance query of the resource type will be executed. 
+                    - Otherwise, if this option is present, then instance query of the resource type will be executed.
                 required: false
                 type: string
             compact:
@@ -130,7 +161,7 @@ options:
                 type: bool
             fields:
                 description:
-                    - Specifies a comma-separated list of attributes to return in a response. 
+                    - Specifies a comma-separated list of attributes to return in a response.
                     - If you do not use this parameter, a query will return the id attribute only.
                     - When using fields, you can:
                         - Use dot notation syntax to return the values of related attributes.
@@ -159,7 +190,7 @@ options:
                 required: false
                 choices:
                     - de-DE: German
-                    - en-US: English 
+                    - en-US: English
                     - es-MX: Latin American Spanish
                     - fr-FR: French
                     - ja-JP: Japanese
@@ -215,7 +246,7 @@ EXAMPLES = '''
     unity_new_password: Password123!
     unity_license_path: /home/labadmin/unity.lic
     unity_other_users:
-      - {username: test1, password: Welcome1!} 
+      - {username: test1, password: Welcome1!}
       - {username: test2, password: Welcome1!, role: operator}
     unity_dns_servers:
       - 10.10.0.21
@@ -224,13 +255,17 @@ EXAMPLES = '''
       - 0.pool.ntp.org
       - 1.pool.ntp.org
     unity_ntp_reboot_privilege: 2
+    unity_syslog_enabled: True
+    unity_syslog_server: "192.168.0.1"
+    unity_syslog_loglevel: 1
+    unity_syslog_protocol: 0
 
 - name: Update user password
   dellemc_unity:
     unity_hostname: "192.168.0.100"
     unity_password: Password123!
     unity_other_users:
-      - {username: test1, password: Welcome1!, new_password: Welcome123!} 
+      - {username: test1, password: Welcome1!, new_password: Welcome123!}
 
 - name: Query DNS and NTP server settings
   dellemc_unity:
@@ -243,7 +278,7 @@ EXAMPLES = '''
 
 RETURN = '''
 unity_update_results:
-    description: 
+    description:
         - A list of JSON objects detailing the results of each successful update operation.
     returned: always
     type: list
@@ -254,27 +289,27 @@ unity_update_results:
                     {
                         "content": {
                             "addresses": [
-                                "10.254.66.23", 
+                                "10.254.66.23",
                                 "10.254.66.24"
-                            ], 
-                            "id": "0", 
+                            ],
+                            "id": "0",
                             "origin": 2
                         }
                     }
-                ], 
-                "entryCount": 1, 
+                ],
+                "entryCount": 1,
                 "resource_type": "dnsServer"
-            }, 
+            },
             {
                 "entries": [
                     {
                         "content": {
-                            "addresses": [], 
+                            "addresses": [],
                             "id": "0"
                         }
                     }
-                ], 
-                "entryCount": 1, 
+                ],
+                "entryCount": 1,
                 "resource_type": "ntpServer"
             }
         ]
@@ -286,7 +321,7 @@ unity_update_results:
             type: complex
             contains:
                 content:
-                    description: 
+                    description:
                         - Content of the instance.
                         - Contains at least the ID of the instance, and possibly other fields specified by the 'fields' parameter in the 'unity_queries' option.
                     returned: always
@@ -302,7 +337,7 @@ unity_update_results:
             type: string
 
 unity_query_results:
-    description: 
+    description:
         - A list of JSON objects detailing the results of each successful query operation.
     returned: always
     type: list
@@ -312,122 +347,122 @@ unity_query_results:
                 "changed": {
                     "args": {
                         "isEulaAccepted": "true"
-                    }, 
+                    },
                     "url": "/api/instances/system/0/action/modify"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
-                        "oldPassword": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER", 
+                        "oldPassword": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER",
                         "password": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER"
-                    }, 
+                    },
                     "url": "/api/instances/user/user_admin/action/modify"
                 }
-            }, 
+            },
             {
                 "ANTIVIRUS_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "BASE_OE_V4_0_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "CIFS_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "ESA_ADAPTER_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "FAST_VP_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "ISCSI_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "LOCAL_COPIES_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "NFS_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "QUALITY_OF_SERVICE_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "THIN_PROVISIONING_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "UNISPHERE_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "UNISPHERE_CENTRAL_license_update": "version 0 to version 1"
-            }, 
+            },
             {
                 "changed": {
                     "args": {
                         "licensePath": "/home/labadmin/unity.lic"
-                    }, 
+                    },
                     "url": "https://192.168.0.202/upload/license"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
-                        "name": "test1", 
-                        "password": "Welcome1!", 
+                        "name": "test1",
+                        "password": "Welcome1!",
                         "role": "administrator"
-                    }, 
+                    },
                     "url": "/api/types/user/instances"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
-                        "name": "test2", 
-                        "password": "Welcome1!", 
+                        "name": "test2",
+                        "password": "Welcome1!",
                         "role": "operator"
-                    }, 
+                    },
                     "url": "/api/types/user/instances"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
-                        "name": "test3", 
-                        "password": "Welcome1!", 
+                        "name": "test3",
+                        "password": "Welcome1!",
                         "role": "administrator"
-                    }, 
+                    },
                     "url": "/api/types/user/instances"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
-                        "oldPassword": "Welcome1!", 
+                        "oldPassword": "Welcome1!",
                         "password": "Welcome1#"
-                    }, 
+                    },
                     "url": "/api/instances/user/user_test3/action/modify"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
                         "addresses": [
-                            "10.254.66.25", 
+                            "10.254.66.25",
                             "10.254.66.26"
                         ]
-                    }, 
+                    },
                     "url": "/api/instances/dnsServer/0/action/modify"
                 }
-            }, 
+            },
             {
                 "changed": {
                     "args": {
                         "addresses": [
-                            "10.254.140.21", 
+                            "10.254.140.21",
                             "10.254.140.22"
-                        ], 
+                        ],
                         "rebootPrivilege": 2
-                    }, 
+                    },
                     "url": "/api/instances/ntpServer/0/action/modify"
                 }
             }
@@ -484,6 +519,10 @@ class Unity:
     self.dnsServers = module.params['unity_dns_servers']
     self.ntpServers = module.params['unity_ntp_servers']
     self.ntpRebootPrivilege = module.params['unity_ntp_reboot_privilege']
+    self.syslogEnabled = module.params['unity_syslog_enabled']
+    self.syslogServer = module.params['unity_syslog_server']
+    self.syslogProtocol = module.params['unity_syslog_protocol']
+    self.syslogLogLevel = module.params['unity_syslog_loglevel']
     self.queries = module.params['unity_queries']
 
     self.checkMode = module.check_mode
@@ -536,7 +575,7 @@ class Unity:
 
   def processAuthResult(self, resp, username):
     self._getResult(resp)
-    if self.err: 	
+    if self.err:
       if resp.status_code == 401:	# Unauthorized password
         self.err['messages'][0]['en-US'] = "Authentication error for User '" + username + "'" 	# Update error message
     return resp
@@ -586,7 +625,7 @@ class Unity:
               version = entry['content']['version']
             else:
               version = '0'
-            isUpdate = self.isLicenseUpdate(self.licensePath, entry['content']['id'], version) or isUpdate 
+            isUpdate = self.isLicenseUpdate(self.licensePath, entry['content']['id'], version) or isUpdate
 
     if isUpdate:
       url = self.apibase + '/upload/license'
@@ -654,7 +693,7 @@ class Unity:
       role = user['role']
     args = {'name': user['username'], 'role': role, 'password': user['password']}
     self._doPost(url, args)
-    
+
   def updateDnsServers(self):
     url = '/api/instances/dnsServer/0'
     params = {'fields':'addresses,domain,origin'}
@@ -673,6 +712,27 @@ class Unity:
       if json.loads(resp.text)['content']['addresses'] != self.ntpServers: 	# only update NTP servers if they are different from the currently ones
         url = '/api/instances/ntpServer/0/action/modify'
         args = {'addresses': self.ntpServers, 'rebootPrivilege': self.ntpRebootPrivilege}
+        return self._doPost(url, args)
+
+  def updateRemoteSyslog(self):
+    url = '/api/instances/remoteSyslog/0'
+    params = {'fields':'address,protocol,facility,enabled'}
+    resp = self._doGet(url, params)
+    if resp.status_code == 200:
+      text = json.loads(resp.text)
+      args = {}
+      url = '/api/instances/remoteSyslog/0/action/modify'
+      if (text['content']['facility'] != self.syslogLogLevel and self.syslogLogLevel is not None):
+        args.update({'facility': self.syslogLogLevel})
+      if (text['content']['protocol'] != self.syslogProtocol and self.syslogProtocol is not None):
+        args.update({'protocol': self.syslogProtocol})
+      if (text['content']['address'] != self.syslogServer and self.syslogServer is not None):
+        args.update({'address': self.syslogServer})
+      if text['content']['enabled'] != self.syslogEnabled: 	# only update syslog server if they are different from the currently ones
+        if not self.syslogEnabled:
+          args = {'enabled': self.syslogEnabled}
+        else:
+          args.update({'enabled': self.syslogEnabled})
         return self._doPost(url, args)
 
   def runQueries(self):
@@ -706,18 +766,18 @@ class Unity:
           result['entries'] = r['entries']
           if 'entryCount' in r:
             result['entryCount'] = r['entryCount']
-        self.queryResults.append(result) 
-  
+        self.queryResults.append(result)
+
   def run(self):
     self.startSession()
     if self.err:
       return
-      
+
     if self.acceptEula:
       self.acceptEULA()
       if self.err:
         return
-      
+
     if self.newPassword:
       self.updatePassword()
       if self.err:
@@ -743,6 +803,11 @@ class Unity:
       if self.err:
         return
 
+    if self.syslogEnabled is not None:
+      self.updateRemoteSyslog()
+      if self.err:
+        return
+
     if self.queries:
       self.runQueries()
       if self.err:
@@ -763,6 +828,10 @@ def main():
             unity_dns_servers = dict(default=None, type='list'),
             unity_ntp_servers = dict(default=None, type='list'),
             unity_ntp_reboot_privilege = dict(default=0, type='int', choices=[0,1,2]),
+            unity_syslog_enabled = dict(default=None, type='bool'),
+            unity_syslog_server = dict(default=None, type='str'),
+            unity_syslog_protocol = dict(default=0, type='int', choices=[0,1,3,4]),
+            unity_syslog_loglevel = dict(default=1, type='int', choices=[0,1,5]),
             unity_queries = dict(default=None, type='list')
         ),
         supports_check_mode=True

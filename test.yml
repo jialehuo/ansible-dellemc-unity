@@ -1,29 +1,16 @@
 ---
 - hosts: localhost
-  gather_facts: False 
   tasks:
-    - name: Testing
+    - name: First time setup of a unity array
       dellemc_unity:
-        unity_hostname: "192.168.0.202"
+        unity_hostname: "192.168.0.34"
         unity_username: admin
-        unity_password: Password123#
-        unity_accept_eula: true
-        unity_new_password: Password123!
-        unity_license_path: /home/labadmin/unity.lic
-        # A list of other users to create or update in the system. The module will fail attempts to update the 'admin' user through this parameter
-        unity_other_users:
-          - {username: test1, password: Welcome1!}                            # Create the user with the default admininistrator role. If the user already exists, do nothing
-          - {username: test2, password: Welcome1!, role: operator}       # Create the user with the operator role, or update the user to operator role. Initial roles in the system are: administrator, operator, storageadmin, vmadmin.
-          - {username: test3, password: Welcome1!, new_password: Welcome1#}   # Create the user if it doesn't exist already, and then update the user's password 
+        unity_password: Password#1
         unity_dns_servers:
-          - 10.254.66.25
-          - 10.254.66.26
-        unity_ntp_servers:
-          - 10.254.140.21
-          - 10.254.140.22
-        unity_ntp_reboot_privilege: 2   #  RebootPrivilegeEnum: 0 = No_Reboot_Allowed, Set time or NTP server if possible without a reboot; 1 = Reboot_Allowed, Set time or NTP server if possible; reboot if needed, but do not allow data unavailability; 2 = DU_Allowed, Set time or NTP server if possible; reboot if needed, even if this will cause data unavailability. If the Unity system time is more than 1000 seconds apart from the NTP servers, then a forced reboot with flag 2 = DU_Allowed is required.
-        unity_queries:
-          - {resource_type: dnsServer, fields: "domain, addresses, origin", page: 1, per_page: 100}
-          - {resource_type: ntpServer, id: "0", fields: addresses}      # id parameter has to be of the string type
+          - 192.168.0.10
+        unity_syslog_enabled: True
+        unity_syslog_server: "192.168.0.11:515"
+        unity_syslog_loglevel: 0
+        unity_syslog_protocol: 1
       register: result
     - debug: var=result
