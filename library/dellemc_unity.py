@@ -344,7 +344,7 @@ unity_query_results:
     sample: >
         "unity_update_results": [
             {
-                "changed": {
+                "change": {
                     "args": {
                         "isEulaAccepted": "true"
                     },
@@ -352,7 +352,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "oldPassword": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER",
                         "password": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER"
@@ -397,7 +397,7 @@ unity_query_results:
                 "UNISPHERE_CENTRAL_license_update": "version 0 to version 1"
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "licensePath": "/home/labadmin/unity.lic"
                     },
@@ -405,7 +405,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "name": "test1",
                         "password": "Welcome1!",
@@ -415,7 +415,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "name": "test2",
                         "password": "Welcome1!",
@@ -425,7 +425,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "name": "test3",
                         "password": "Welcome1!",
@@ -435,7 +435,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "oldPassword": "Welcome1!",
                         "password": "Welcome1#"
@@ -444,7 +444,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "addresses": [
                             "10.254.66.25",
@@ -455,7 +455,7 @@ unity_query_results:
                 }
             },
             {
-                "changed": {
+                "change": {
                     "args": {
                         "addresses": [
                             "10.254.140.21",
@@ -468,26 +468,10 @@ unity_query_results:
             }
         ]
     contains:
-        changed:
+        change:
             description:
-                - Resources changed in the Unity system.
+                - Resource change in the Unity system.
                 - Returned under non-check mode.
-            type: complex
-            contains:
-                url:
-                    description:
-                        - URL of the operation to change the resource.
-                    returned: always
-                    type: string
-                args:
-                    description:
-                        - Arguments of the operation to change the resource.
-                    returned: always
-                    type: complex
-        to_be_changed:
-            description:
-                - Resources to be changed in the Unity system.
-                - Returned under check mode.
             type: complex
             contains:
                 url:
@@ -551,10 +535,9 @@ class Unity:
     return resp
 
   def _postResult(self, resp, url, args, changed=True):
-    changedTxt = 'changed'
+    changedTxt = 'change'
     if self.checkMode:
-      changedTxt = 'to_be_changed'
-
+      pass
     if self.checkMode or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
