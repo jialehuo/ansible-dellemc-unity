@@ -33,107 +33,11 @@ options:
         required: false
         default: "Password123#"
         type: string
-    unity_accept_eula:
-        description:
-            - Indicate whether the administrator accepts the EULA of the Unity system.
-        required: false
-        default: False
-        type: bool
-    unity_new_password:
-        description:
-            - New password to replace the old one of the Unity system's default administrator user.
-        required: false
-        type: string
     unity_license_path:
         description:
             - Path to the license file of the Unity system.
         required: false
         type: string
-    unity_other_users:
-        description:
-            - Create or update users of the Unity system other than the default administrator user.
-        required: false
-        type: list
-        suboptions:
-            username:
-                description:
-                    - Username of the user.
-                required: true
-                type: string
-            password:
-                description:
-                    - Password of the user.
-                required: true
-                type: string
-            new_password:
-                description:
-                    - New password to replace the old one of the user.
-                required: false
-                type: string
-            role:
-                description:
-                    - Role of the user in the Unity system.
-                required: false
-                default: "administrator"
-                choices:
-                    - administrator
-                    - operator
-                    - storageadmin
-                    - vmadmin
-                type: string
-    unity_dns_servers:
-        description:
-            - Update DNS servers of the Unity system.
-        required: false
-        type: list
-    unity_ntp_servers:
-        description:
-            - Update NTP servers of the Unity system.
-        required: false
-        type: list
-    unity_syslog_enabled:
-        description:
-            - Enable/Disable Remote Syslog of the Unity system.
-        required: false
-        type: bool
-    unity_syslog_server:
-        description:
-            - Update the Remote Syslog Server of the Unity system.
-        required: false
-        type: string
-    unity_syslog_protocol:
-        description:
-            - Update the Remote Syslog Protocol of the Unity system.
-        required: false
-        type: int
-        default = 0
-        choices:
-            - 0 = udp
-            - 1 = tcp
-            - 3 = Vendor_Specific
-            - 4 = Other
-    unity_syslog_loglevel:
-        description:
-            - Update the Remote Syslog Log Level (Facility) of the Unity system.
-        required: false
-        type: int
-        default = 1
-        choices:
-            - 0 = Kernel Messages
-            - 1 = User-Level Messages
-            - 5 = Messages Generated Internally by syslogd
-    unity_ntp_reboot_privilege:
-        description:
-            - Option to reboot the Unity system when updating NTP servers.
-            - Reboot for a time change is required only if the time shift exceeds a threshold of 1000 seconds.
-            - If a reboot is required, and allowed, on a single SP system or a system with only one SP operating, then clients will be unable to access data during the reboot.
-        required: false
-        default: 0
-        choices:
-            - 0 = No_Reboot_Allowed: Set time or NTP server if possible without a reboot.
-            - 1 = Reboot_Allowed: Set time or NTP server if possible; reboot if needed, but do not allow data unavailability.
-            - 2 = DU_Allowed: Set time or NTP server if possible; reboot if needed, even if this will cause data unavailability.
-        type: int
     unity_queries:
         description:
             - Query the Unity system for resource information.
@@ -242,38 +146,13 @@ EXAMPLES = '''
     unity_hostname: "192.168.0.100"
     unity_username: admin
     unity_password: Password123#
-    unity_accept_eula: true
-    unity_new_password: Password123!
+    unity_updates:
+      - {resource_type: system, id: '0', fields: {'isEULAAccepted':'isEulaAccepted'}, isEulaAccepted: 'true'}
+    unity_update_passwords:
+      - {username: admin, password: Password123#, new_password: Password123!}
     unity_license_path: /home/labadmin/unity.lic
-    unity_other_users:
-      - {username: test1, password: Welcome1!}
-      - {username: test2, password: Welcome1!, role: operator}
-    unity_dns_servers:
-      - 10.10.0.21
-      - 10.10.0.22
-    unity_ntp_servers:
-      - 0.pool.ntp.org
-      - 1.pool.ntp.org
-    unity_ntp_reboot_privilege: 2
-    unity_syslog_enabled: True
-    unity_syslog_server: "192.168.0.1"
-    unity_syslog_loglevel: 1
-    unity_syslog_protocol: 0
 
-- name: Update user password
-  dellemc_unity:
-    unity_hostname: "192.168.0.100"
-    unity_password: Password123!
-    unity_other_users:
-      - {username: test1, password: Welcome1!, new_password: Welcome123!}
 
-- name: Query DNS and NTP server settings
-  dellemc_unity:
-    unity_hostname: "192.168.0.100"
-    unity_password: Password123!
-    unity_queries:
-        - {resource_type: dnsServer, fields: "domain, addresses, origin", page: 1, per_page: 100}
-        - {resource_type: ntpServer, id: "0", fields: addresses}
 '''
 
 RETURN = '''
@@ -496,19 +375,12 @@ class Unity:
     self.hostname = module.params['unity_hostname']
     self.username = module.params['unity_username']
     self.password = module.params['unity_password']
-    self.acceptEula = module.params['unity_accept_eula']
-    self.newPassword = module.params['unity_new_password']
     self.licensePath = module.params['unity_license_path']
-    self.otherUsers = module.params['unity_other_users']
-    self.dnsServers = module.params['unity_dns_servers']
-    self.ntpServers = module.params['unity_ntp_servers']
-    self.ntpRebootPrivilege = module.params['unity_ntp_reboot_privilege']
-    self.syslogEnabled = module.params['unity_syslog_enabled']
-    self.syslogServer = module.params['unity_syslog_server']
-    self.syslogProtocol = module.params['unity_syslog_protocol']
-    self.syslogLogLevel = module.params['unity_syslog_loglevel']
+    self.updates = module.params['unity_updates']
+    self.passwordUpdates = module.params['unity_password_updates']
     self.queries = module.params['unity_queries']
 
+    self.module = module
     self.checkMode = module.check_mode
 
     self.processedUsers = []
@@ -519,6 +391,12 @@ class Unity:
     self.updateResults = []
     self.queryResults = []
     self.err = None
+
+  def exitFail(self):
+      self.module.fail_json(changed=self.changed, msg = self.err, unity_update_results = self.updateResults, unity_query_results = self.queryResults)
+   
+  def exitSuccess(self):
+    self.module.exit_json(changed=self.changed, unity_update_results = self.updateResults, unity_query_results = self.queryResults)
 
   def _getMsg(self, resp):
     try:
@@ -532,29 +410,42 @@ class Unity:
       pass
     else:
       self.err = self._getMsg(resp)
+      self.exitFail()
     return resp
-
-  def _postResult(self, resp, url, args, changed=True):
+ 
+  def _postResult(self, resp, url, args, changed=True, **kwargs):
     changedTxt = 'change'
-    if self.checkMode:
-      pass
+    if resp:
+      url = resp.url
+    elif 'params' in kwargs:	# Reconstruct URL with parameters
+      url += '?'
+      for key, value in kwargs['params'].items():
+        url += key + '=' + value + '&'
+      url = url.strip('?&')
     if self.checkMode or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
-        self.updateResults.append({changedTxt: {'url': url, 'args': args}})
+        changeContent =  {'url': url, 'args': args}
+        if resp and resp.text:
+          changeContent.update(json.loads(resp.text))
+        self.updateResults.append({changedTxt: changeContent})
     else:
       self.err = self._getMsg(resp)
       self.err.update({'url': url, 'args': args})
-
-  def _doPost(self, url, args, changed=True):
-    if self.checkMode:
-      resp = None
-    else:
-      resp = self.session.post(self.apibase + url, json = args, headers=self.headers, verify=False)
-    self._postResult(resp, url, args, changed=changed)
+      self.exitFail()
 
   def _doGet(self, url, params):
     return self._getResult(self.session.get(self.apibase + url, params=params, headers=self.headers, verify=False))
+
+  def _doPost(self, url, args, changed=True, **kwargs):
+    if self.checkMode:
+      resp = None
+    else:
+      if kwargs is None:
+        kwargs = {}
+      kwargs.update({'headers': self.headers, 'verify': False})
+      resp = self.session.post(self.apibase + url, json = args, **kwargs)
+    self._postResult(resp, url, args, changed=changed, **kwargs)
 
   def processAuthResult(self, resp, username):
     self._getResult(resp)
@@ -575,21 +466,16 @@ class Unity:
     args = {'localCleanupOnly' : 'true'}
     self._doPost(url, args, changed=False)
 
-  def acceptEULA(self):
-    url = '/api/instances/system/0'
-    params = {'fields':'isEULAAccepted'}
-    resp = self._doGet(url, params)
-    if resp.status_code // 100 == 2:
-      if not json.loads(resp.text)['content']['isEULAAccepted']:	# only accept EULA if it is not already accepted
-        url = '/api/instances/system/0/action/modify'
-        args = {'isEulaAccepted':'true'}
-        self._doPost(url, args)
+  def runPasswordUpdates(self):
+    for update in self.passwordUpdates:
+      self.runPasswordUpdate(update)
 
-  def updatePassword(self):
-    self.updateUserPassword(self.username, self.password, self.newPassword)
-    self.password = self.newPassword
-
-  def updateUserPassword(self, username, password, newPassword):
+  def runPasswordUpdate(self, update):
+    username = update.get('username')
+    password = update.get('password')
+    newPassword = update.get('new_password')
+    r = requests.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(username, password), headers=self.headers, verify=False)
+    self.processAuthResult(r, username)
     if password != newPassword:	# only update password if it is different from the existing one
       url = '/api/instances/user/user_' + username + '/action/modify'
       args = {'password':newPassword, 'oldPassword':password}
@@ -631,98 +517,15 @@ class Unity:
             return True
     return False
 
-  def processOtherUsers(self):
-    for user in self.otherUsers:
-      if user['username'] == 'admin':
-        self.err = {'error': 'The module cannot update user "admin" through the "unity_other_users" parameter'}
-        return
-      if user['username'] in self.processedUsers:
-        self.err = {'error': 'User "' + user['username'] +'" is defined more than once in the "unity_other_users" list'}
-        return
-      url = '/api/instances/user/user_' + user['username']
-      params = {'fields':'id,name,role'}
-      resp = self._doGet(url, params)
-      if resp.status_code == 404:	# User not found
-        self.err = None			# Suppress the error and create the user instead
-        self.createUser(user)
-      if self.err:
-        return
-      if resp.status_code != 404:	# User already exists in the system
-        if 'password' in user:	# Verify existing user's password
-          r = requests.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(user['username'], user['password']), headers=self.headers, verify=False)
-          self.processAuthResult(r, user['username'])
-        if self.err:
-          return
-        if 'role' in user:	# Only update existing user's role
-          self.updateUserRole(user['username'], json.loads(resp.text)['content']['role']['id'], user['role'])
-        if self.err:
-          return
-      if 'new_password' in user:	# Update user's password. Newly created user's password can also be updated here.
-        self.updateUserPassword(user['username'], user['password'], user['new_password'])
-      if self.err:
-        return
-      self.processedUsers.append(user['username'])
-
-  def updateUserRole(self, username, role, newRole):
-    if role != newRole:
-      url = '/api/instances/user/user_' + username + '/action/modify'
-      args = {'role': newRole}
-      self._doPost(url, args)
-
-  def createUser(self, user):
-    url = '/api/types/user/instances'
-    role = 'administrator'	# default role
-    if 'role' in user:
-      role = user['role']
-    args = {'name': user['username'], 'role': role, 'password': user['password']}
-    self._doPost(url, args)
-
-  def updateDnsServers(self):
-    url = '/api/instances/dnsServer/0'
-    params = {'fields':'addresses,domain,origin'}
-    resp = self._doGet(url, params)
-    if resp.status_code == 200:
-      if json.loads(resp.text)['content']['addresses'] != self.dnsServers: 	# only update DNS servers if they are different from the current ones
-        url = '/api/instances/dnsServer/0/action/modify'
-        args = {'addresses': self.dnsServers}
-        self._doPost(url, args)
-
-  def updateNtpServers(self):
-    url = '/api/instances/ntpServer/0'
-    params = {'fields':'addresses'}
-    resp = self._doGet(url, params)
-    if resp.status_code == 200:
-      if json.loads(resp.text)['content']['addresses'] != self.ntpServers: 	# only update NTP servers if they are different from the currently ones
-        url = '/api/instances/ntpServer/0/action/modify'
-        args = {'addresses': self.ntpServers, 'rebootPrivilege': self.ntpRebootPrivilege}
-        return self._doPost(url, args)
-
-  def updateRemoteSyslog(self):
-    url = '/api/instances/remoteSyslog/0'
-    params = {'fields':'address,protocol,facility,enabled'}
-    resp = self._doGet(url, params)
-    if resp.status_code == 200:
-      text = json.loads(resp.text)
-      args = {}
-      url = '/api/instances/remoteSyslog/0/action/modify'
-      if (text['content']['facility'] != self.syslogLogLevel and self.syslogLogLevel is not None):
-        args.update({'facility': self.syslogLogLevel})
-      if (text['content']['protocol'] != self.syslogProtocol and self.syslogProtocol is not None):
-        args.update({'protocol': self.syslogProtocol})
-      if (text['content']['address'] != self.syslogServer and self.syslogServer is not None):
-        args.update({'address': self.syslogServer})
-      if text['content']['enabled'] != self.syslogEnabled: 	# only update syslog server if they are different from the currently ones
-        if not self.syslogEnabled:
-          args = {'enabled': self.syslogEnabled}
-        else:
-          args.update({'enabled': self.syslogEnabled})
-        return self._doPost(url, args)
-
   def runQueries(self):
     for query in self.queries:
+      result = self.runQuery(query)
+      self.queryResults.append(result)
+
+  def runQuery(self, query):
       if not 'resource_type' in query:	# A query must have the "resource_type" parameter
         self.err = {'error': 'Query has no "resource_type" parameter', 'query': query}
-        return
+        self.exitFail()
       instanceKeys = ['compact', 'fields', 'language']	# Instance query keys
       collectionKeys = ['compact', 'fields', 'filter', 'groupby', 'language', 'orderby', 'page', 'per_page', 'with_entrycount']	# Collection query keys
       if 'id' in query:
@@ -737,64 +540,122 @@ class Unity:
       if 'id' not in query and 'with_entrycount' not in params:	# Collection query without the 'with_entrycount' parameter
         params['with_entrycount'] = 'true'	# By default, return the entryCount response component in the response data.
       resp = self._doGet(url, params)
-      if self.err:
-        return
+      r = json.loads(resp.text)
+      result = {'resourceType': query['resource_type']}
+      if 'id' in query:
+        result['entries'] = [r]
+        result['entryCount'] = 1
       else:
-        r = json.loads(resp.text)
-        result = {'resourceType': query['resource_type']}
-        if 'id' in query:
-          result['entries'] = [r]
-          result['entryCount'] = 1
+        result['entries'] = r['entries']
+        result['entryCount'] = r.get('entryCount', len(r['entries']))
+      return result
+
+  def runUpdates(self):
+    for update in self.updates:
+      self.runUpdate(update)
+
+  def runUpdate(self, update):
+      if not 'resource_type' in update:	# A resource must have the "resource_type" parameter
+        self.err = {'error': 'Update has no "resource_type" parameter', 'update': update}
+        self.exitFail()
+
+      if 'id' in update:	# Update an existing resource instance with ID
+        if 'action' in update:
+          action = update['action']
         else:
-          result['entries'] = r['entries']
-          if 'entryCount' in r:
-            result['entryCount'] = r['entryCount']
-        self.queryResults.append(result)
+          action = 'modify' # default action
+          if 'fields' in update:
+            if self.isSameAsCurrent(update):	# Update values are the same as the current ones, so no need to do the update
+              return
+        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + action
+      else:
+        if 'action' in update:	# Class-level action
+          url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
+        else:	# Create a new instance
+          if self.checkMode:
+            duplicates = self.isDuplicate(update)
+            if duplicates:
+              self.updateResults.append({'warning': 'Instances with similar parameters already exist for the creation operation', 'update': update, 'duplicates': duplicates})
+              return
+          url = '/api/types/' + update['resource_type'] + '/instances'
+      paramKeys = ['language', 'timeout']
+      urlKeys = ['resource_type', 'id', 'action', 'fields'] + paramKeys
+      params = {key: update[key] for key in update if key in paramKeys}
+      args = {key: update[key] for key in update if key not in urlKeys}
+  
+      resp = self._doPost(url, args, params = params)
+
+  def isSameAsCurrent(self, update):
+    query = {key: update[key] for key in update if key in ['resource_type', 'id', 'language']}
+    fields = {}
+    if 'fields' in update:
+      if isinstance(update['fields'], str):
+        fields = {field.strip(): field.strip() for field in update['fields'].split(',')}
+      elif isinstance(update['fields'], dict):
+        fields = update['fields']
+      elif isinstance(update['fields'], list):
+        fields = {field: field for field in update['fields']}
+      
+    query['fields'] = ','.join(fields.keys())
+    queryResult = self.runQuery(query)
+    content = queryResult['entries'][0]['content']
+    for queryField, updateField in fields.items():
+      queryValue = self.getDottedValue(content, queryField)
+      updateValue = self.getDottedValue(update, updateField)
+      if queryValue != updateValue:
+        return False
+    else:
+      return True
+
+  def isDuplicate(self, update):
+    query = {key: update[key] for key in update if key in ['resource_type', 'language']}
+    fields = None
+    if 'fields' in update:
+      if isinstance(update['fields'], list):
+        fields = {field: field for field in update['fields']}
+      elif isinstance(update['fields'], dict):
+        fields = update['fields']
+    if fields == None:
+      fields = {field: field for field in update if field not in ['resource_type', 'id', 'action', 'fields', 'language', 'timeout', 'password', 'new_password']}
+    filter = ''
+    for queryField, updateField in fields.items():
+      filter += queryField + ' eq ' + self.processFilterValue(self.getDottedValue(update, updateField)) + ' and '
+    filter = re.sub(' and $', '', filter)
+    query['filter'] = filter
+    result = self.runQuery(query)
+    if result['entryCount'] > 0: 
+      return result['entries']
+    else:
+      return None
+
+  def getDottedValue(self, dictionary, dottedKey, separator = '.'):
+    value = dictionary
+    for key in dottedKey.split(separator):
+      if value:
+        value = value.get(key)
+      else:
+        break
+    return value
+
+  def processFilterValue(self, value):
+    if isinstance(value, str):
+      value = '"' + value + '"'
+    return value
 
   def run(self):
     self.startSession()
-    if self.err:
-      return
 
-    if self.acceptEula:
-      self.acceptEULA()
-      if self.err:
-        return
+    if self.updates:
+      self.runUpdates()
 
-    if self.newPassword:
-      self.updatePassword()
-      if self.err:
-        return
+    if self.passwordUpdates:
+      self.runPasswordUpdates()
 
     if self.licensePath:
       self.uploadLicense()
-      if self.err:
-        return
-
-    if self.otherUsers:
-      self.processOtherUsers()
-      if self.err:
-        return
-
-    if self.dnsServers:
-      self.updateDnsServers()
-      if self.err:
-        return
-
-    if self.ntpServers:
-      self.updateNtpServers()
-      if self.err:
-        return
-
-    if self.syslogEnabled is not None:
-      self.updateRemoteSyslog()
-      if self.err:
-        return
 
     if self.queries:
       self.runQueries()
-      if self.err:
-        return
 
     self.stopSession()
 
@@ -804,17 +665,9 @@ def main():
             unity_hostname=dict(default=None, required=True, type='str'),
             unity_username=dict(default='admin', type='str'),
             unity_password=dict(default='Password123#', type='str', no_log=True),
-            unity_accept_eula=dict(default=False, type='bool'),
-            unity_new_password = dict(default=None, type='str', no_log=True),
             unity_license_path = dict(default=None, type='path'),
-            unity_other_users = dict(default=None, type='list'),
-            unity_dns_servers = dict(default=None, type='list'),
-            unity_ntp_servers = dict(default=None, type='list'),
-            unity_ntp_reboot_privilege = dict(default=0, type='int', choices=[0,1,2]),
-            unity_syslog_enabled = dict(default=None, type='bool'),
-            unity_syslog_server = dict(default=None, type='str'),
-            unity_syslog_protocol = dict(default=0, type='int', choices=[0,1,3,4]),
-            unity_syslog_loglevel = dict(default=1, type='int', choices=[0,1,5]),
+            unity_updates = dict(default=None, type='list'),
+            unity_password_updates = dict(default=None, type='list'),
             unity_queries = dict(default=None, type='list')
         ),
         supports_check_mode=True
@@ -823,9 +676,9 @@ def main():
     unity = Unity(module)
     unity.run()
     if unity.err:
-      module.fail_json(changed=unity.changed, msg = unity.err, unity_update_results = unity.updateResults, unity_query_results = unity.queryResults)
+      unity.exitFail()
     else:
-      module.exit_json(changed=unity.changed, unity_update_results = unity.updateResults, unity_query_results = unity.queryResults)
+      unity.exitSuccess()
 
 if __name__ == '__main__':
     main()

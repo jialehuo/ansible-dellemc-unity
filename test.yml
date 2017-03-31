@@ -1,16 +1,15 @@
 ---
 - hosts: localhost
   tasks:
-    - name: First time setup of a unity array
+    - name: Initial setup
       dellemc_unity:
-        unity_hostname: "192.168.0.34"
+        unity_hostname: "192.168.0.202"
         unity_username: admin
-        unity_password: Password#1
-        unity_dns_servers:
-          - 192.168.0.10
-        unity_syslog_enabled: True
-        unity_syslog_server: "192.168.0.11:515"
-        unity_syslog_loglevel: 0
-        unity_syslog_protocol: 1
+        unity_password: Password123#
+        unity_updates:
+          - {resource_type: system, id: '0', fields: {'isEULAAccepted':'isEulaAccepted'}, isEulaAccepted: 'true'}
+        unity_update_passwords:
+          - {username: admin, password: Password123#, new_password: Password123!}
+        unity_license_path: /home/labadmin/unity.lic
       register: result
     - debug: var=result
