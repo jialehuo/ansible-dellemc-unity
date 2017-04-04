@@ -7,8 +7,8 @@
         unity_username: admin
         unity_password: Password123#
         unity_updates:
-          - {resource_type: system, id: '0', fields: {'isEULAAccepted':'isEulaAccepted'}, isEulaAccepted: 'true'}
-        unity_update_passwords:
+          - {resource_type: system, id: '0', isEulaAccepted: true, attributes: {'isEULAAccepted':'isEulaAccepted'}}
+        unity_password_updates:
           - {username: admin, password: Password123#, new_password: Password123!}
         unity_license_path: /home/labadmin/unity.lic
       register: result

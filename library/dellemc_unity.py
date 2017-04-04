@@ -147,8 +147,8 @@ EXAMPLES = '''
     unity_username: admin
     unity_password: Password123#
     unity_updates:
-      - {resource_type: system, id: '0', fields: {'isEULAAccepted':'isEulaAccepted'}, isEulaAccepted: 'true'}
-    unity_update_passwords:
+      - {resource_type: system, id: '0', attributes: {'isEULAAccepted':'isEulaAccepted'}, isEulaAccepted: 'true'}
+    unity_password_updates:
       - {username: admin, password: Password123#, new_password: Password123!}
     unity_license_path: /home/labadmin/unity.lic
 
@@ -383,10 +383,10 @@ class Unity:
     self.module = module
     self.checkMode = module.check_mode
 
-    self.processedUsers = []
     self.apibase = 'https://' + self.hostname	# Base URL of the REST API
     self.headers = {'X-EMC-REST-CLIENT': 'true', 'content-type': 'application/json', 'Accept': 'application/json'}       # HTTP headers for REST API requests, less the 'EMC-CSRF-TOKEN' header
     self.session = requests.Session()
+
     self.changed = False
     self.updateResults = []
     self.queryResults = []
@@ -405,14 +405,23 @@ class Unity:
       msg = {'httpStatusCode': resp.status_code, 'messages': [{'en-US': resp.text}]}
     return msg
 
-  def _getResult(self, resp):
+  def _getResult(self, resp, **kwargs):
     if resp.status_code // 100 == 2:	# HTTP status code 2xx = success
-      pass
-    else:
-      self.err = self._getMsg(resp)
-      self.exitFail()
-    return resp
+      return resp
+
+    self.err = self._getMsg(resp)
+    self.err.update({'url': resp.url})
+    if resp.status_code == 401 and kwargs.get('auth'):	# Unauthorized password
+      self.err['messages'][0]['en-US'] = "Authentication error for User '" + kwargs['auth'].username + "'" 	# Update error message
+    self.exitFail()
  
+  def _doGet(self, url, params=None, **kwargs):
+    if kwargs is None:
+      kwargs = {}
+    kwargs.update({'headers': self.headers, 'verify': False})
+    resp = self.session.get(self.apibase + url, params=params, **kwargs)
+    return self._getResult(resp, **kwargs)
+
   def _postResult(self, resp, url, args, changed=True, **kwargs):
     changedTxt = 'change'
     if resp:
@@ -431,11 +440,8 @@ class Unity:
         self.updateResults.append({changedTxt: changeContent})
     else:
       self.err = self._getMsg(resp)
-      self.err.update({'url': url, 'args': args})
+      self.err.update({'url': resp.url, 'args': args})
       self.exitFail()
-
-  def _doGet(self, url, params):
-    return self._getResult(self.session.get(self.apibase + url, params=params, headers=self.headers, verify=False))
 
   def _doPost(self, url, args, changed=True, **kwargs):
     if self.checkMode:
@@ -447,54 +453,29 @@ class Unity:
       resp = self.session.post(self.apibase + url, json = args, **kwargs)
     self._postResult(resp, url, args, changed=changed, **kwargs)
 
-  def processAuthResult(self, resp, username):
-    self._getResult(resp)
-    if self.err:
-      if resp.status_code == 401:	# Unauthorized password
-        self.err['messages'][0]['en-US'] = "Authentication error for User '" + username + "'" 	# Update error message
-    return resp
-
   def startSession(self):
-    resp = self.session.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(self.username, self.password), headers=self.headers, verify=False)
-    self.processAuthResult(resp, self.username)
-    if resp.status_code // 100 == 2:	# 2xx status code - success
-      # Add 'EMC-CSRF-TOKEN' header
-      self.headers['EMC-CSRF-TOKEN']=resp.headers['EMC-CSRF-TOKEN']
+    url = '/api/instances/system/0'
+    auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+    resp = self._doGet(url, auth=auth)
+    # Add 'EMC-CSRF-TOKEN' header
+    self.headers['EMC-CSRF-TOKEN']=resp.headers['EMC-CSRF-TOKEN']
 
   def stopSession(self):
     url = '/api/types/loginSessionInfo/action/logout'
     args = {'localCleanupOnly' : 'true'}
     self._doPost(url, args, changed=False)
 
-  def runPasswordUpdates(self):
-    for update in self.passwordUpdates:
-      self.runPasswordUpdate(update)
-
-  def runPasswordUpdate(self, update):
-    username = update.get('username')
-    password = update.get('password')
-    newPassword = update.get('new_password')
-    r = requests.get(self.apibase+'/api/instances/system/0', auth=requests.auth.HTTPBasicAuth(username, password), headers=self.headers, verify=False)
-    self.processAuthResult(r, username)
-    if password != newPassword:	# only update password if it is different from the existing one
-      url = '/api/instances/user/user_' + username + '/action/modify'
-      args = {'password':newPassword, 'oldPassword':password}
-      self._doPost(url, args)
-
   def uploadLicense(self):
     isUpdate = False
-    url = '/api/types/license/instances'
-    params = {'fields': 'id, name, isInstalled, version, isValid, issued, expires, isPermanent'}
-    resp = self._doGet(url, params)
-    if resp.status_code // 100 == 2:
-      if 'entries' in json.loads(resp.text):
-        for entry in json.loads(resp.text)['entries']:
-          if 'content' in entry:
-            if 'isInstalled' in entry['content'] and entry['content']['isInstalled']:
-              version = entry['content']['version']
-            else:
-              version = '0'
-            isUpdate = self.isLicenseUpdate(self.licensePath, entry['content']['id'], version) or isUpdate
+    query = {'resource_type': 'license', 'fields': 'id, name, isInstalled, version, isValid, issued, expires, isPermanent'}
+    result = self.runQuery(query)
+    for entry in result['entries']:
+      if entry.get('content'):
+        if entry['content'].get('isInstalled'):
+          version = entry['content'].get('version')
+        else:
+          version = '0'
+        isUpdate = self.isLicenseUpdate(self.licensePath, entry['content'].get('id'), version) or isUpdate
 
     if isUpdate:
       url = self.apibase + '/upload/license'
@@ -516,6 +497,111 @@ class Unity:
             self.updateResults.append({id + '_license_update': 'version ' + version + ' to version ' + m.group('new_version')})
             return True
     return False
+
+  def runUpdates(self):
+    for update in self.updates:
+      self.runUpdate(update)
+
+  def runUpdate(self, update):
+      if not 'resource_type' in update:	# A resource must have the "resource_type" parameter
+        self.err = {'error': 'Update has no "resource_type" parameter', 'update': update}
+        self.exitFail()
+
+      if 'id' in update:	# Update an existing resource instance with ID
+        if 'action' in update:
+          action = update['action']
+        else:
+          action = 'modify' # default action
+          if self.isDuplicate(update):
+            self.updateResults.append({'warning': 'The existing instances already has the same attributes as the update operation. No update will happen.', 'update': update})
+            return
+        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + action
+      else:
+        if 'action' in update:	# Class-level action
+          url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
+        else:	# Create a new instance
+          if self.checkMode:	# Only check duplicate entries during check mode. The users accept the consequences if they still want to add the new instance
+            duplicates = self.isDuplicate(update)
+            if duplicates:
+              self.updateResults.append({'warning': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'update': update, 'duplicates': duplicates})
+              return
+          url = '/api/types/' + update['resource_type'] + '/instances'
+      paramKeys = ['language', 'timeout']
+      urlKeys = ['resource_type', 'id', 'action', 'attributes', 'filter'] + paramKeys
+      params = {key: update[key] for key in update if key in paramKeys}
+      args = {key: update[key] for key in update if key not in urlKeys}
+  
+      resp = self._doPost(url, args, params = params)
+
+  def isDuplicate(self, update):
+    # If this is an password update, then only proceed when the password is different from the old one
+    if 'password' in update and 'oldPassword' in update:
+      return update['password'] == update['oldPassword']
+
+    query = {key: update[key] for key in update if key in ['resource_type', 'id', 'language']}
+    attributes = None
+    if 'attributes' in update:
+      if isinstance(update['attributes'], list):
+        attributes = {attr: attr for attr in update['attributes']}
+      elif isinstance(update['attributes'], dict):
+        attributes = update['attributes']
+    if attributes is None:	# if attributes to catch duplicates are not specified, find them in the update parameters
+      attributes = {attr: attr for attr in update if attr not in ['resource_type', 'id', 'action', 'fields', 'language', 'timeout', 'password', 'new_password', 'attributes', 'filter']}
+
+    if 'id' in update:
+      query['fields'] = ','.join(attributes.keys())
+    else:
+      filter = ''
+      if 'filter' in update:
+        filter = update['filter'] + ' and '
+      for queryAttr, updateAttr in attributes.items():
+        filter += queryAttr + self.processFilterValue(self.getDottedValue(update, updateAttr)) + ' and '
+      filter = re.sub(' and $', '', filter)
+      query['filter'] = filter
+   
+    result = self.runQuery(query)
+    
+    if 'id' in update:
+      content = result['entries'][0]['content']
+      for queryAttr, updateAttr in attributes.items():
+        if self.getDottedValue(content, queryAttr) != self.getDottedValue(update, updateAttr):
+          return False
+      else:
+        return True
+    elif result['entryCount'] > 0: 
+      return result['entries']
+    else:
+      return None
+
+  def getDottedValue(self, dictionary, dottedKey, separator = '.'):
+    value = dictionary
+    for key in dottedKey.split(separator):
+      if value:
+        value = value.get(key)
+      else:
+        break
+    return value
+
+  def processFilterValue(self, value):
+    if isinstance(value, str):
+      value = ' eq "' + value + '"'
+    else:
+      value = ' eq ' + str(value)
+    return value
+
+  def runPasswordUpdates(self):
+    for update in self.passwordUpdates:
+      self.runPasswordUpdate(update)
+
+  def runPasswordUpdate(self, update):
+    username = update.get('username')
+    password = update.get('password')
+    newPassword = update.get('new_password')
+    kwargs = {'auth': requests.auth.HTTPBasicAuth(username, password), 'headers': self.headers, 'verify': False}
+    resp = requests.get(self.apibase+'/api/instances/system/0', **kwargs)
+    self._getResult(resp, **kwargs)	# process get results 
+    update = {'resource_type': 'user', 'id': 'user_' + username, 'password':newPassword, 'oldPassword':password}
+    self.runUpdate(update)
 
   def runQueries(self):
     for query in self.queries:
@@ -541,7 +627,7 @@ class Unity:
         params['with_entrycount'] = 'true'	# By default, return the entryCount response component in the response data.
       resp = self._doGet(url, params)
       r = json.loads(resp.text)
-      result = {'resourceType': query['resource_type']}
+      result = {'query': query, 'url': resp.url}
       if 'id' in query:
         result['entries'] = [r]
         result['entryCount'] = 1
@@ -549,98 +635,6 @@ class Unity:
         result['entries'] = r['entries']
         result['entryCount'] = r.get('entryCount', len(r['entries']))
       return result
-
-  def runUpdates(self):
-    for update in self.updates:
-      self.runUpdate(update)
-
-  def runUpdate(self, update):
-      if not 'resource_type' in update:	# A resource must have the "resource_type" parameter
-        self.err = {'error': 'Update has no "resource_type" parameter', 'update': update}
-        self.exitFail()
-
-      if 'id' in update:	# Update an existing resource instance with ID
-        if 'action' in update:
-          action = update['action']
-        else:
-          action = 'modify' # default action
-          if 'fields' in update:
-            if self.isSameAsCurrent(update):	# Update values are the same as the current ones, so no need to do the update
-              return
-        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + action
-      else:
-        if 'action' in update:	# Class-level action
-          url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
-        else:	# Create a new instance
-          if self.checkMode:
-            duplicates = self.isDuplicate(update)
-            if duplicates:
-              self.updateResults.append({'warning': 'Instances with similar parameters already exist for the creation operation', 'update': update, 'duplicates': duplicates})
-              return
-          url = '/api/types/' + update['resource_type'] + '/instances'
-      paramKeys = ['language', 'timeout']
-      urlKeys = ['resource_type', 'id', 'action', 'fields'] + paramKeys
-      params = {key: update[key] for key in update if key in paramKeys}
-      args = {key: update[key] for key in update if key not in urlKeys}
-  
-      resp = self._doPost(url, args, params = params)
-
-  def isSameAsCurrent(self, update):
-    query = {key: update[key] for key in update if key in ['resource_type', 'id', 'language']}
-    fields = {}
-    if 'fields' in update:
-      if isinstance(update['fields'], str):
-        fields = {field.strip(): field.strip() for field in update['fields'].split(',')}
-      elif isinstance(update['fields'], dict):
-        fields = update['fields']
-      elif isinstance(update['fields'], list):
-        fields = {field: field for field in update['fields']}
-      
-    query['fields'] = ','.join(fields.keys())
-    queryResult = self.runQuery(query)
-    content = queryResult['entries'][0]['content']
-    for queryField, updateField in fields.items():
-      queryValue = self.getDottedValue(content, queryField)
-      updateValue = self.getDottedValue(update, updateField)
-      if queryValue != updateValue:
-        return False
-    else:
-      return True
-
-  def isDuplicate(self, update):
-    query = {key: update[key] for key in update if key in ['resource_type', 'language']}
-    fields = None
-    if 'fields' in update:
-      if isinstance(update['fields'], list):
-        fields = {field: field for field in update['fields']}
-      elif isinstance(update['fields'], dict):
-        fields = update['fields']
-    if fields == None:
-      fields = {field: field for field in update if field not in ['resource_type', 'id', 'action', 'fields', 'language', 'timeout', 'password', 'new_password']}
-    filter = ''
-    for queryField, updateField in fields.items():
-      filter += queryField + ' eq ' + self.processFilterValue(self.getDottedValue(update, updateField)) + ' and '
-    filter = re.sub(' and $', '', filter)
-    query['filter'] = filter
-    result = self.runQuery(query)
-    if result['entryCount'] > 0: 
-      return result['entries']
-    else:
-      return None
-
-  def getDottedValue(self, dictionary, dottedKey, separator = '.'):
-    value = dictionary
-    for key in dottedKey.split(separator):
-      if value:
-        value = value.get(key)
-      else:
-        break
-    return value
-
-  def processFilterValue(self, value):
-    if isinstance(value, str):
-      value = '"' + value + '"'
-    return value
 
   def run(self):
     self.startSession()
