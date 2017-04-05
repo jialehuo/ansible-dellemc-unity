@@ -9,7 +9,7 @@ DOCUMENTATION = '''
 module: dellemc_unity
 short_description: Configure and manage Dell EMC Unity Storage System
 description:
-    - This module can be use d to configure and manage Dell EMC Unity Storage System.
+    - This module can be used to configure and manage Dell EMC Unity Storage System.
     - The module supports check mode.
 version_added: "2.2"
 author:
@@ -38,10 +38,105 @@ options:
             - Path to the license file of the Unity system.
         required: false
         type: string
+    unity_updates:
+        description: 
+            - Update resources of the Unity system.
+            - See "Unisphere Management REST API Programer's Guide" for examples of how to update Unity system resources.
+            - See "Unisphere Management REST API Reference Guide" for details and arguments of each individual resource's update operations.
+        required: false
+        type: list
+        suboptions:
+            resource_type:
+                description:
+                    - Type of the resource to be queried.
+                required: true
+                type: string
+            id:
+                description:
+                    - ID of an instance of the resouce type to be updated.
+                    - If this option is present, then instance update of the resouce type will be executed.
+                    - Otherwise, if this option is missing, then the update operation either creates a new instance, or executes a class-level action.
+                    - If the "action" option is present, then a class-level action on the resource type is executed.
+                    - Otherwise, if the "action" option is missing, then a new instance of the resource type is created.
+                required: false
+                type: string
+            action:
+                description:
+                    - Action of the update operation.
+                    - If the "id" option is present, then the action is executed on the instance.
+                    - Otherwise, if the "id" option is missing, then the action is executed at the class-level on the resouce type. 
+                required: false
+                default: "modify"
+                type: string
+            attributes:
+                description:
+                    - The attributes to compare to decide whether an update should be executed.
+                    - If attributes are missing, then all attributes in the update will be compared against the existing values.
+                    - If attributes is a list, then queries of attributes of the same names will be compared to the ones in the update.
+                    - Sometimes an attribute in the query field is different than that as an update argument, in this case, a dictionary mapping queried attributes to update arguments can be used.
+                    - If the update is on an instance with ID, then the attributes specifies which one of the current values of the instance should be compared with the values to be updated. If all values are the same, then the update will not be executed, but a warning will be issued.
+                    - If the update is to create a new instance, then the attributes are used to search for instances of the same attribute values. If such duplicates exist, a warning will be issued in check mode.
+                    - Dotted attributes can be used to compare related resources.
+                required: false
+                type: list or dictionary
+            filter:
+                description:
+                    - A filter for query to find duplicates of an instance creation update.
+                    - See "Unisphere Management REST API Programmer's Guide" for details on how to create a filter for queries.
+                    - It can be a partial filter, complemented by the list of attributes to compare.
+                required: false
+                type: string
+            language:
+                description:
+                    - Overrides the value of the Accept-language: header.
+                    - This is useful for testing from a plain browser or from an environment where URL parameters are easier to use than HTTP headers.
+                    - The language parameter specifies the localization language for error messages, events, alerts, and other localizable responses.
+                required: false
+                choices:
+                    - de-DE: German
+                    - en-US: English
+                    - es-MX: Latin American Spanish
+                    - fr-FR: French
+                    - ja-JP: Japanese
+                    - ko-KR: Korean
+                    - pt-BR: Brazilian Portuguese
+                    - ru-RU: Russian
+                    - zh-CN: Chinese
+                default: en-US
+                type: string
+            timeout:
+                description:
+                    - Seconds before timeout.
+                    - Executes the request in the background. Most active management requests (ones that attempt to change the configuration) support this option. 
+                    - The documentation for each API method in the Unisphere Management REST API Reference Guide specifies whether the method supports this option.
+                required: false
+                type: int
+    unity_password_updates:
+        description: 
+            - Update passwords of users of the Unity system. a
+        required: false
+        type: list
+        suboptions:
+            username: 
+                description:
+                    - Name of the user.
+                required: true
+                type: string
+            password:
+                description:
+                    - Current password of the user.
+                required: true
+                type: string
+            new_password:
+                description:
+                    - New passowrd of the user.
+                required: true
+                type: string
     unity_queries:
         description:
             - Query the Unity system for resource information.
             - See "Unisphere Management REST API Programmer's Guide" for detailed description and examples of the query parameters.
+            - See "Unisphere Management REST API Reference Guide" for details and attributes (field names) of each individual resource's query operations.
         required: false
         type: list
         suboptions:
@@ -152,13 +247,30 @@ EXAMPLES = '''
       - {username: admin, password: Password123#, new_password: Password123!}
     unity_license_path: /home/labadmin/unity.lic
 
-
+- name: Updates and queries
+  dellemc_unity:
+    unity_hostname: "192.168.0.202"
+    unity_username: admin
+    unity_password: Password123!
+    unity_updates:
+      - {resource_type: user, name: test1, password: Welcome1!, role: administrator, attributes: [name]}
+      - {resource_type: user, id: 'user_test1', attributes: {'role.id':'role'}, role: 'operator'}
+      - {resource_type: remoteSyslog, id: '0', enabled: True, address: '192.168.0.11:515', protocol: 1, facility: 0}
+      - {resource_type: dnsServer, id: '0', addresses: [10.254.66.23, 10.254.66.24]}
+      - {resource_type: ntpServer, id: '0', attributes: [addresses], addresses: [10.254.140.21, 10.254.140.22], rebootPrivilege: 2}
+    unity_password_updates:
+      - {username: test1, password: Welcome1!, new_password: Welcome2!}
+    unity_queries:
+      - {resource_type: user, id: 'user_test1', fields: 'role.id'}
+      - {resource_type: remoteSyslog, id: "0", fields: 'address,protocol,facility,enabled'}      # id parameter has to be of the string type
+      - {resource_type: dnsServer, fields: "domain, addresses, origin", page: 1, per_page: 100}
+      - {resource_type: ntpServer, id: "0", fields: addresses}      # id parameter has to be of the string type
 '''
 
 RETURN = '''
-unity_update_results:
+unity_query_results:
     description:
-        - A list of JSON objects detailing the results of each successful update operation.
+        - A list of JSON objects detailing the results of each successful query operation.
     returned: always
     type: list
     sample: >
@@ -167,29 +279,82 @@ unity_update_results:
                 "entries": [
                     {
                         "content": {
-                            "addresses": [
-                                "10.254.66.23",
-                                "10.254.66.24"
-                            ],
-                            "id": "0",
-                            "origin": 2
+                            "id": "user_test1", 
+                            "role": {
+                                "id": "operator"
+                            }
                         }
                     }
-                ],
-                "entryCount": 1,
-                "resource_type": "dnsServer"
-            },
+                ], 
+                "entryCount": 1, 
+                "query": {
+                    "fields": "role.id", 
+                    "id": "user_test1", 
+                    "resource_type": "user"
+                }, 
+                "url": "https://192.168.0.202/api/instances/user/user_test1?compact=true&fields=role.id"
+            }, 
             {
                 "entries": [
                     {
                         "content": {
-                            "addresses": [],
+                            "address": "192.168.0.11:515", 
+                            "enabled": true, 
+                            "facility": 0, 
+                            "id": "0", 
+                            "protocol": 1
+                        }
+                    }
+                ], 
+                "entryCount": 1, 
+                "query": {
+                    "fields": "address,protocol,facility,enabled", 
+                    "id": "0", 
+                    "resource_type": "remoteSyslog"
+                }, 
+                "url": "https://192.168.0.202/api/instances/remoteSyslog/0?compact=true&fields=address%2Cprotocol%2Cfacility%2Cenabled"
+            }, 
+            {
+                "entries": [
+                    {
+                        "content": {
+                            "addresses": [
+                                "10.254.66.23", 
+                                "10.254.66.24"
+                            ], 
+                            "id": "0", 
+                            "origin": 2
+                        }
+                    }
+                ], 
+                "entryCount": 1, 
+                "query": {
+                    "fields": "domain, addresses, origin", 
+                    "page": 1, 
+                    "per_page": 100, 
+                    "resource_type": "dnsServer"
+                }, 
+                "url": "https://192.168.0.202/api/types/dnsServer/instances?compact=true&fields=domain%2C+addresses%2C+origin&with_entrycount=true&page=1&per_page=100"
+            }, 
+            {
+                "entries": [
+                    {
+                        "content": {
+                            "addresses": [
+                                "10.254.140.21", 
+                                "10.254.140.22"
+                            ], 
                             "id": "0"
                         }
                     }
-                ],
-                "entryCount": 1,
-                "resource_type": "ntpServer"
+                ], 
+                "entryCount": 1, 
+                "query": {
+                    "fields": "addresses", 
+                    "id": "0", 
+                    "resource_type": "ntpServer"
+                }, 
+                "url": "https://192.168.0.202/api/instances/ntpServer/0?compact=true&fields=addresses"
             }
         ]
     contains:
@@ -209,15 +374,20 @@ unity_update_results:
             description:
                 - Count of entries returned.
             type: int
-        resourceType:
+        query:
             description:
-                - Type of the resource returned.
+                - The original query.
+            returned: always
+            type: complex
+        url:
+            description:
+                - URL of the query.
             returned: always
             type: string
 
-unity_query_results:
+unity_update_results:
     description:
-        - A list of JSON objects detailing the results of each successful query operation.
+        - A list of JSON objects detailing the results of each successful update operation.
     returned: always
     type: list
     sample: >
@@ -225,124 +395,58 @@ unity_query_results:
             {
                 "change": {
                     "args": {
-                        "isEulaAccepted": "true"
-                    },
-                    "url": "/api/instances/system/0/action/modify"
-                }
-            },
-            {
-                "change": {
-                    "args": {
-                        "oldPassword": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER",
-                        "password": "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER"
-                    },
-                    "url": "/api/instances/user/user_admin/action/modify"
-                }
-            },
-            {
-                "ANTIVIRUS_license_update": "version 0 to version 1"
-            },
-            {
-                "BASE_OE_V4_0_license_update": "version 0 to version 1"
-            },
-            {
-                "CIFS_license_update": "version 0 to version 1"
-            },
-            {
-                "ESA_ADAPTER_license_update": "version 0 to version 1"
-            },
-            {
-                "FAST_VP_license_update": "version 0 to version 1"
-            },
-            {
-                "ISCSI_license_update": "version 0 to version 1"
-            },
-            {
-                "LOCAL_COPIES_license_update": "version 0 to version 1"
-            },
-            {
-                "NFS_license_update": "version 0 to version 1"
-            },
-            {
-                "QUALITY_OF_SERVICE_license_update": "version 0 to version 1"
-            },
-            {
-                "THIN_PROVISIONING_license_update": "version 0 to version 1"
-            },
-            {
-                "UNISPHERE_license_update": "version 0 to version 1"
-            },
-            {
-                "UNISPHERE_CENTRAL_license_update": "version 0 to version 1"
-            },
-            {
-                "change": {
-                    "args": {
-                        "licensePath": "/home/labadmin/unity.lic"
-                    },
-                    "url": "https://192.168.0.202/upload/license"
-                }
-            },
-            {
-                "change": {
-                    "args": {
-                        "name": "test1",
-                        "password": "Welcome1!",
+                        "name": "test1", 
+                        "password": "Welcome1!", 
                         "role": "administrator"
+                    }, 
+                    "response": {
+                        "@base": "https://192.168.0.202/api/instances/user", 
+                        "content": {
+                            "id": "user_test1"
+                        }, 
+                        "links": [
+                            {
+                                "href": "/user_test1", 
+                                "rel": "self"
+                            }
+                        ], 
+                        "updated": "2017-04-04T13:32:05.837Z"
                     },
-                    "url": "/api/types/user/instances"
+                    "url": "https://192.168.0.202/api/types/user/instances"
                 }
-            },
+            }, 
             {
                 "change": {
                     "args": {
-                        "name": "test2",
-                        "password": "Welcome1!",
-                        "role": "operator"
-                    },
-                    "url": "/api/types/user/instances"
+                        "address": "192.168.0.11:515", 
+                        "enabled": true, 
+                        "facility": 0, 
+                        "protocol": 1
+                    }, 
+                    "url": "https://192.168.0.202/api/instances/remoteSyslog/0/action/modify"
                 }
-            },
+            }, 
             {
-                "change": {
-                    "args": {
-                        "name": "test3",
-                        "password": "Welcome1!",
-                        "role": "administrator"
-                    },
-                    "url": "/api/types/user/instances"
-                }
-            },
-            {
-                "change": {
-                    "args": {
-                        "oldPassword": "Welcome1!",
-                        "password": "Welcome1#"
-                    },
-                    "url": "/api/instances/user/user_test3/action/modify"
-                }
-            },
+                "update": {
+                    "addresses": [
+                        "10.254.66.23", 
+                        "10.254.66.24"
+                    ], 
+                    "id": "0", 
+                    "resource_type": "dnsServer"
+                }, 
+                "warning": "The existing instances already has the same attributes as the update operation. No update will happen."
+            }, 
             {
                 "change": {
                     "args": {
                         "addresses": [
-                            "10.254.66.25",
-                            "10.254.66.26"
-                        ]
-                    },
-                    "url": "/api/instances/dnsServer/0/action/modify"
-                }
-            },
-            {
-                "change": {
-                    "args": {
-                        "addresses": [
-                            "10.254.140.21",
+                            "10.254.140.21", 
                             "10.254.140.22"
-                        ],
+                        ], 
                         "rebootPrivilege": 2
-                    },
-                    "url": "/api/instances/ntpServer/0/action/modify"
+                    }, 
+                    "url": "https://192.168.0.202/api/instances/ntpServer/0/action/modify"
                 }
             }
         ]
@@ -350,7 +454,8 @@ unity_query_results:
         change:
             description:
                 - Resource change in the Unity system.
-                - Returned under non-check mode.
+                - If returned under check mode, it indicates the change to be carried out.
+            returned: success
             type: complex
             contains:
                 url:
@@ -363,6 +468,21 @@ unity_query_results:
                         - Arguments of the operation to change the resource.
                     returned: always
                     type: complex
+                response:
+                    description:
+                        - Non-empty response of the update operation from the Unity system.
+                    type: complex
+        update:
+            description:
+                - The original update request.
+                - Only returned when the update failed.
+            returned: failure
+            type: complex
+        message:
+            description:
+                - Warning or failure message of the failed update operation.
+            returned: failure
+            type: string
 
 '''
 
@@ -436,7 +556,7 @@ class Unity:
         self.changed = changed
         changeContent =  {'url': url, 'args': args}
         if resp and resp.text:
-          changeContent.update(json.loads(resp.text))
+          changeContent['response'] = json.loads(resp.text)
         self.updateResults.append({changedTxt: changeContent})
     else:
       self.err = self._getMsg(resp)
@@ -513,7 +633,7 @@ class Unity:
         else:
           action = 'modify' # default action
           if self.isDuplicate(update):
-            self.updateResults.append({'warning': 'The existing instances already has the same attributes as the update operation. No update will happen.', 'update': update})
+            self.updateResults.append({'message': 'The existing instances already has the same attributes as the update operation. No update will happen.', 'update': update})
             return
         url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + action
       else:
@@ -523,7 +643,7 @@ class Unity:
           if self.checkMode:	# Only check duplicate entries during check mode. The users accept the consequences if they still want to add the new instance
             duplicates = self.isDuplicate(update)
             if duplicates:
-              self.updateResults.append({'warning': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'update': update, 'duplicates': duplicates})
+              self.updateResults.append({'message': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'update': update, 'duplicates': duplicates})
               return
           url = '/api/types/' + update['resource_type'] + '/instances'
       paramKeys = ['language', 'timeout']
@@ -546,7 +666,7 @@ class Unity:
       elif isinstance(update['attributes'], dict):
         attributes = update['attributes']
     if attributes is None:	# if attributes to catch duplicates are not specified, find them in the update parameters
-      attributes = {attr: attr for attr in update if attr not in ['resource_type', 'id', 'action', 'fields', 'language', 'timeout', 'password', 'new_password', 'attributes', 'filter']}
+      attributes = {attr: attr for attr in update if attr not in ['resource_type', 'id', 'action', 'language', 'timeout', 'password', 'new_password', 'attributes', 'filter']}
 
     if 'id' in update:
       query['fields'] = ','.join(attributes.keys())
