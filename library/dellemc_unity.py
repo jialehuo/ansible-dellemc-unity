@@ -71,9 +71,9 @@ options:
             attributes:
                 description:
                     - The attributes to compare to decide whether an update should be executed.
-                    - If attributes are missing, then all attributes in the update will be compared against the existing values.
+                    - If attributes are missing, then the default, hard-coded attribute will be compared against the existing values.
                     - If attributes is a list, then queries of attributes of the same names will be compared to the ones in the update.
-                    - Sometimes an attribute in the query field is different than that as an update argument, in this case, a dictionary mapping queried attributes to update arguments can be used.
+                    - Sometimes an attribute in the query field is different from that as an update argument, in this case, a dictionary mapping queried attributes to update arguments can be used.
                     - If the update is on an instance with ID, then the attributes specifies which one of the current values of the instance should be compared with the values to be updated. If all values are the same, then the update will not be executed, but a warning will be issued.
                     - If the update is to create a new instance, then the attributes are used to search for instances of the same attribute values. If such duplicates exist, a warning will be issued in check mode.
                     - Dotted attributes can be used to compare related resources.
@@ -84,6 +84,7 @@ options:
                     - A filter for query to find duplicates of an instance creation update.
                     - See "Unisphere Management REST API Programmer's Guide" for details on how to create a filter for queries.
                     - It can be a partial filter, complemented by the list of attributes to compare.
+                    - If the filter is missing, then the default, hard-coded filter will be used.
                 required: false
                 type: string
             language:
@@ -265,6 +266,14 @@ EXAMPLES = '''
       - {resource_type: remoteSyslog, id: "0", fields: 'address,protocol,facility,enabled'}      # id parameter has to be of the string type
       - {resource_type: dnsServer, fields: "domain, addresses, origin", page: 1, per_page: 100}
       - {resource_type: ntpServer, id: "0", fields: addresses}      # id parameter has to be of the string type
+
+- name: Deletes
+  dellemc_unity:
+    unity_hostname: "192.168.0.202"
+    unity_username: admin
+    unity_password: Password123!
+    unity_updates:
+      - {resource_type: user, id: 'user_test1', action: 'delete'}
 '''
 
 RETURN = '''
@@ -387,44 +396,42 @@ unity_query_results:
 
 unity_update_results:
     description:
-        - A list of JSON objects detailing the results of each successful update operation.
+        - A list of JSON objects detailing the results of each operation.
     returned: always
     type: list
     sample: >
         "unity_update_results": [
             {
-                "change": {
-                    "args": {
-                        "name": "test1", 
-                        "password": "Welcome1!", 
-                        "role": "administrator"
+                "args": {
+                    "name": "test1", 
+                    "password": "Welcome1!", 
+                    "role": "administrator"
+                }, 
+                "HTTP_method": "POST",
+                "response": {
+                    "@base": "https://192.168.0.202/api/instances/user", 
+                    "content": {
+                        "id": "user_test1"
                     }, 
-                    "response": {
-                        "@base": "https://192.168.0.202/api/instances/user", 
-                        "content": {
-                            "id": "user_test1"
-                        }, 
-                        "links": [
-                            {
-                                "href": "/user_test1", 
-                                "rel": "self"
-                            }
-                        ], 
-                        "updated": "2017-04-04T13:32:05.837Z"
-                    },
-                    "url": "https://192.168.0.202/api/types/user/instances"
-                }
+                    "links": [
+                        {
+                            "href": "/user_test1", 
+                            "rel": "self"
+                        }
+                    ], 
+                    "updated": "2017-04-04T13:32:05.837Z"
+                },
+                "url": "https://192.168.0.202/api/types/user/instances"
             }, 
             {
-                "change": {
-                    "args": {
-                        "address": "192.168.0.11:515", 
-                        "enabled": true, 
-                        "facility": 0, 
-                        "protocol": 1
-                    }, 
-                    "url": "https://192.168.0.202/api/instances/remoteSyslog/0/action/modify"
-                }
+                "args": {
+                    "address": "192.168.0.11:515", 
+                    "enabled": true, 
+                    "facility": 0, 
+                    "protocol": 1
+                }, 
+                "HTTP_method": "POST",
+                "url": "https://192.168.0.202/api/instances/remoteSyslog/0/action/modify"
             }, 
             {
                 "update": {
@@ -438,40 +445,42 @@ unity_update_results:
                 "warning": "The existing instances already has the same attributes as the update operation. No update will happen."
             }, 
             {
-                "change": {
-                    "args": {
-                        "addresses": [
-                            "10.254.140.21", 
-                            "10.254.140.22"
-                        ], 
-                        "rebootPrivilege": 2
-                    }, 
-                    "url": "https://192.168.0.202/api/instances/ntpServer/0/action/modify"
-                }
+                "args": {
+                    "addresses": [
+                        "10.254.140.21", 
+                        "10.254.140.22"
+                    ], 
+                    "rebootPrivilege": 2
+                }, 
+                "HTTP_method": "POST",
+                "url": "https://192.168.0.202/api/instances/ntpServer/0/action/modify"
+            },
+            {
+                "HTTP_method": "DELETE", 
+                "url": "https://192.168.0.202/api/instances/user/user_test1"
             }
         ]
     contains:
-        change:
+        HTTP_method:
             description:
-                - Resource change in the Unity system.
-                - If returned under check mode, it indicates the change to be carried out.
+                - HTTP method used to effect the update.
+            returned: success
+            type: string
+        url:
+            description:
+                - URL of the operation to change the resource.
+            returned: success
+            type: string
+        args:
+            description:
+                - Arguments of the operation to change the resource.
             returned: success
             type: complex
-            contains:
-                url:
-                    description:
-                        - URL of the operation to change the resource.
-                    returned: always
-                    type: string
-                args:
-                    description:
-                        - Arguments of the operation to change the resource.
-                    returned: always
-                    type: complex
-                response:
-                    description:
-                        - Non-empty response of the update operation from the Unity system.
-                    type: complex
+        response:
+            description:
+                - Non-empty response of the update operation from the Unity system.
+            returned: success
+            type: complex
         update:
             description:
                 - The original update request.
@@ -488,6 +497,27 @@ unity_update_results:
 
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
+
+actionAttribs = {
+  'create': {
+    'user': ['name']
+  },
+  'modify': {
+    'ntpServer': ['addresses'],
+    'system': {
+      'name':'name', 
+      'isUpgradeComplete':'isUpgradeCompleted', 
+      'isAutoFailbackEnabled':'isAutoFailbackEnabled',
+      'isEULAAccepted':'isEulaAccepted'
+    }, 
+    'user': {'role.id': 'role'},
+  },
+}
+
+actionFilters = {
+  'create': {
+  }
+}
 
 class Unity:
 
@@ -542,8 +572,7 @@ class Unity:
     resp = self.session.get(self.apibase + url, params=params, **kwargs)
     return self._getResult(resp, **kwargs)
 
-  def _postResult(self, resp, url, args, changed=True, **kwargs):
-    changedTxt = 'change'
+  def _changeResult(self, resp, url, args=None, changed=True, httpMethod='POST', **kwargs):
     if resp:
       url = resp.url
     elif 'params' in kwargs:	# Reconstruct URL with parameters
@@ -554,13 +583,18 @@ class Unity:
     if self.checkMode or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
-        changeContent =  {'url': url, 'args': args}
+        changeContent =  {'HTTP_method': httpMethod}
+        changeContent['url'] = url
+        if args is not None:
+          changeContent['args'] = args
         if resp and resp.text:
           changeContent['response'] = json.loads(resp.text)
-        self.updateResults.append({changedTxt: changeContent})
+        self.updateResults.append(changeContent)
     else:
       self.err = self._getMsg(resp)
-      self.err.update({'url': resp.url, 'args': args})
+      self.err['url'] = resp.url
+      if args is not None:
+        self.err['args'] = args
       self.exitFail()
 
   def _doPost(self, url, args, changed=True, **kwargs):
@@ -571,7 +605,17 @@ class Unity:
         kwargs = {}
       kwargs.update({'headers': self.headers, 'verify': False})
       resp = self.session.post(self.apibase + url, json = args, **kwargs)
-    self._postResult(resp, url, args, changed=changed, **kwargs)
+    self._changeResult(resp, url, args, changed=changed, **kwargs)
+
+  def _doDelete(self, url, **kwargs):
+    if self.checkMode:
+      resp = None
+    else:
+      if kwargs is None:
+        kwargs = {}
+      kwargs.update({'headers': self.headers, 'verify': False})
+      resp = self.session.delete(self.apibase + url, **kwargs)
+    self._changeResult(resp, url, httpMethod='DELETE', **kwargs)
 
   def startSession(self):
     url = '/api/instances/system/0'
@@ -605,7 +649,7 @@ class Unity:
         files = {'upload': open(self.licensePath, 'rb')}
         headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
         resp = self.session.post(url, files = files, headers=headers, verify=False)
-      self._postResult(resp, url, {'licensePath': self.licensePath})
+      self._changeResult(resp, url, {'licensePath': self.licensePath})
 
   def isLicenseUpdate(self, licensePath, id, version='0'):
     r = re.compile('^INCREMENT ' + id + ' EMCLM ' + '(?P<new_version>\d+\.?\d*)')
@@ -628,18 +672,25 @@ class Unity:
         self.exitFail()
 
       if 'id' in update:	# Update an existing resource instance with ID
-        if 'action' in update:
-          action = update['action']
-        else:
-          action = 'modify' # default action
+        if 'action' not in update:
+          update['action'] = 'modify' # default action
           if self.isDuplicate(update):
             self.updateResults.append({'message': 'The existing instances already has the same attributes as the update operation. No update will happen.', 'update': update})
             return
-        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + action
+        elif update['action'] == 'delete':
+          if not self.isDuplicate(update):
+            self.updateResults.append({'message': 'The instance to be deleted does not exist. No update will happen.', 'update': update})
+            return
+          else:
+            url = '/api/instances/' + update['resource_type'] + '/' + update['id']
+            resp = self._doDelete(url)
+            return
+        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + update['action']
       else:
         if 'action' in update:	# Class-level action
           url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
-        else:	# Create a new instance
+        else:	
+          update['action'] = 'create'	# Create a new instance
           if self.checkMode:	# Only check duplicate entries during check mode. The users accept the consequences if they still want to add the new instance
             duplicates = self.isDuplicate(update)
             if duplicates:
@@ -659,36 +710,57 @@ class Unity:
       return update['password'] == update['oldPassword']
 
     query = {key: update[key] for key in update if key in ['resource_type', 'id', 'language']}
-    attributes = None
-    if 'attributes' in update:
-      if isinstance(update['attributes'], list):
-        attributes = {attr: attr for attr in update['attributes']}
-      elif isinstance(update['attributes'], dict):
-        attributes = update['attributes']
-    if attributes is None:	# if attributes to catch duplicates are not specified, find them in the update parameters
-      attributes = {attr: attr for attr in update if attr not in ['resource_type', 'id', 'action', 'language', 'timeout', 'password', 'new_password', 'attributes', 'filter']}
+    attrs = None
+    filter = None
 
-    if 'id' in update:
-      query['fields'] = ','.join(attributes.keys())
-    else:
-      filter = ''
+    if update['action'] in ['create', 'modify']:	# Only create or modify actions need to compare attributes with existing resource instances
+      # First, use the default, hard-coded attributes
+      attrs = actionAttribs[update['action']].get(update['resource_type'])
+
+      # Next, if there is customer supplied attributes in the Ansible task, then override the default attributes   
+      if 'attributes' in update:
+        attrs = update['attributes']
+
+      # Last, if attributes is still not set, then use all attributes in the update that are resource-type specific
+      if attrs is None:	# if attributes to catch duplicates are not specified, find them in the update parameters
+        attrs = {attr: attr for attr in update if attr not in ['resource_type', 'id', 'action', 'language', 'timeout', 'password', 'new_password', 'attributes', 'filter']}
+
+      if isinstance(attrs, list):
+        attributes = {attr: attr for attr in attrs}
+      elif isinstance(attrs, dict):
+        attributes = attrs
+
+    if update['action'] == 'create':	# Only create action needs a filter to find duplicates
+      # First, use the default, hard-coded filter
+      filter = actionFilters[update['action']].get(update['resource_type'])	
+
+      # Next, if there is customer supplied filter in the Ansible task, then override the default filter
       if 'filter' in update:
-        filter = update['filter'] + ' and '
+        filter = update['filter']
+
+      # Last, if filter is still not set, then set it to empty string
+      if filter is None:
+        filter = ''
+
+    if update['action'] == 'modify':	# Only modify action adds the 'fields' argument to the query
+      query['fields'] = ','.join([field for field in attributes.keys() if attributes[field] in update])
+    elif update['action'] == 'create':	# Only create action adds the 'filter' argument to the query
       for queryAttr, updateAttr in attributes.items():
-        filter += queryAttr + self.processFilterValue(self.getDottedValue(update, updateAttr)) + ' and '
-      filter = re.sub(' and $', '', filter)
+        if updateAttr in update:
+          filter = queryAttr + self.processFilterValue(self.getDottedValue(update, updateAttr)) + ' and ' + filter
+      filter = re.sub(' and $', '', filter)	# strip the trailing 'and' if the original filter is empty string
       query['filter'] = filter
    
     result = self.runQuery(query)
-    
-    if 'id' in update:
+   
+    if update['action'] == 'modify':	# For modify action, compare queried attributes and update attributes 
       content = result['entries'][0]['content']
       for queryAttr, updateAttr in attributes.items():
-        if self.getDottedValue(content, queryAttr) != self.getDottedValue(update, updateAttr):
+        if updateAttr in update and self.getDottedValue(content, queryAttr) != self.getDottedValue(update, updateAttr):
           return False
       else:
         return True
-    elif result['entryCount'] > 0: 
+    elif result['entryCount'] > 0:	# For all other actions, the updated resource is a duplicate if the query returns some entries 
       return result['entries']
     else:
       return None
