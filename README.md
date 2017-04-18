@@ -63,13 +63,14 @@ For an update or query option, the 'resource_type' attribute is mandatory, and t
 
 For queries:
 
-1. If 'id' is present, then it is a query of the specific instance; otherwise, if 'id' is missing, then it is a query of a collection of instances of the resource type.
+1. If 'id' is present, then it is a query of the specific instance; otherwise, 
+2. If 'id' is missing, then it is a query of a collection of instances of the resource type.
 
 For more details of the query/update URL parameters, see "Unisphere Management REST API Programmer's Guide". For more details of the update arguments, see "Unisphere Management REST API Reference Guide". Each parameter or argument is an attribute in an update option.
 
 Password updates are distinct from other updates, because you can neither query nor compare passwords. Therefore, there is a separate type of update only for passwords. In this case, you only provide the username, current password, and new password of the user that you wish to update.
 
-Last, to delete a resource instance, you use an update option with the resource type, instance ID, and the action 'delete'. Here is the sample task in test-2.yml:
+To delete a resource instance, you use an update option with the resource type, instance ID, and the action 'delete'. Here is the sample task in test-2.yml:
 
     - name: Updates and queries
       dellemc_unity:
@@ -78,4 +79,11 @@ Last, to delete a resource instance, you use an update option with the resource 
         unity_password: Password123!
         unity_updates:
           - {resource_type: user, id: 'user_test1', action: 'delete'}
+
+To create a pool, you have to first run the action 'recommendAutoConfiguration', then create pools according to the recommendation, and later you can update the pool. The following three sample updates should be run in three tasks in sequence:
+
+        unity_updates:
+          - {resource_type: pool, action: 'recommendAutoConfiguration'}
+          - {resource_type: pool, name: 'performancePool', 'addRaidGroupParameters': [{"dskGroup" : {"id" : "dg_3"}, "numDisks" : 6, "raidType" : 48879, "stripeWidth" : 0}], 'attributes': ['name']}
+          - {resource_type: pool, id: pool_1, name: 'testPool', description: 'test pool'}
 

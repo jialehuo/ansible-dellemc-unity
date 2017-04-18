@@ -500,16 +500,51 @@ from ansible.module_utils.basic import AnsibleModule
 
 actionAttribs = {
   'create': {
+    'alertConfigSNMPTarget': {'address': 'targetAddress'},
+    'capabilityProfile': ['name', 'pool'],
+    'cifsServer': ['nasServer'],
+    'pool': ['name'],
     'user': ['name']
   },
   'modify': {
+    'alertConfig': {
+      'locale': 'alertLocale',
+      'isThresholdAlertsEnabled': 'isThresholdAlertsEnabled',
+      'minEmailNotificationSeverity': 'minEmailNotificationSeverity',
+      'minSNMPTrapNotificationSeverity': 'minSNMPTrapNotificationSeverity',
+      'emailFromAddress': 'emailFromAddress',
+      'destinationEmails': 'destinationEmails'
+    },
+    'alertConfigSNMPTarget': {
+      'address': 'targetAddress',
+      'username': 'username',
+      'authProto': 'authProtocol',
+      'privacyProto': 'privProtocol'
+    },
+    'capabilityProfile': ['name', 'description', 'usageTags'],
     'ntpServer': ['addresses'],
+    'pool': {
+      'name': 'name',
+      'description': 'description',
+      'storageResourceType': 'storageResourceType',
+      'alertThreshold': 'alertThreshold',
+      'poolSpaceHarvestHighThreshold': 'poolSpaceHarvestHighThreshold',
+      'poolSpaceHarvestLowThreshold': 'poolSpaceHarvestLowThreshold',
+      'snapSpaceHarvestHighThreshold': 'snapSpaceHarvestHighThreshold',
+      'snapSpaceHarvestLowThreshold': 'snapSpaceHarvestLowThreshold',
+      'isHarvestEnabled': 'isHarvestEnabled',
+      'isSnapHarvestEnabled': 'isSnapHarvestEnabled',
+      'isFASTCacheEnabled': 'isFASTCacheEnabled',
+      'isFASTVpScheduleEnabled': 'isFASTVpScheduleEnabled',
+      'poolFastVP.isScheduleEnabled': 'isFASTVpScheduleEnabled'
+    },
     'system': {
       'name':'name', 
       'isUpgradeComplete':'isUpgradeCompleted', 
       'isAutoFailbackEnabled':'isAutoFailbackEnabled',
       'isEULAAccepted':'isEulaAccepted'
-    }, 
+    },
+    'cifsServer': ['name', 'description', 'netbiosName', 'domain', 'workgroup', 'nasServer'],
     'user': {'role.id': 'role'},
   },
 }
