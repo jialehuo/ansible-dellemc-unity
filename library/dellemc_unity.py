@@ -744,6 +744,10 @@ class Unity:
     if 'password' in update and 'oldPassword' in update:
       return update['password'] == update['oldPassword']
 
+    # If this is an update of Proxy password, then do no checks because it is not possible to verify the HTTP Proxy's password
+    if 'proxyPassword' in update:
+      return false
+
     query = {key: update[key] for key in update if key in ['resource_type', 'id', 'language']}
     attrs = None
     filter = None

@@ -87,3 +87,14 @@ To create a pool, you have to first run the action 'recommendAutoConfiguration',
           - {resource_type: pool, name: 'performancePool', 'addRaidGroupParameters': [{"dskGroup" : {"id" : "dg_3"}, "numDisks" : 6, "raidType" : 48879, "stripeWidth" : 0}], 'attributes': ['name']}
           - {resource_type: pool, id: pool_1, name: 'testPool', description: 'test pool'}
 
+To configure ESRS, you have to run the following updates in a series of tasks in sequence, and then you can run a query for the ESRS parameters:
+
+        unity_updates:
+          - {resource_type: systemInformation, id: '0', contactFirstName: 'Joe', contactLastName: 'Smith', locationName: 'Test Site', contactEmail: 'joe.smith@test.com', contactPhone: '123-456-7890'}
+          - {resource_type: esrsParam, id: '0', action: checkNetwork}
+          - {resource_type: esrsParam, id: '0', action: requestAccessCode}
+          - {resource_type: esrsParam, id: '0', action: getAvailableSites, accessCode : "243857"}
+          - {resource_type: esrsParam, id: '0', "siteId" : "324546"}
+        unity_queries:
+          - {resource_type: esrsParam, fields: 'enabled,isCentralized,status, statusDescription::@enum(status)'}
+
