@@ -497,6 +497,7 @@ unity_update_results:
 
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
+from datetime import datetime
 
 actionAttribs = {
   'create': {
@@ -607,7 +608,7 @@ class Unity:
     resp = self.session.get(self.apibase + url, params=params, **kwargs)
     return self._getResult(resp, **kwargs)
 
-  def _changeResult(self, resp, url, args=None, changed=True, httpMethod='POST', **kwargs):
+  def _changeResult(self, resp, url, args=None, changed=True, httpMethod='POST', msg=None, **kwargs):
     if resp:
       url = resp.url
     elif 'params' in kwargs:	# Reconstruct URL with parameters
@@ -615,15 +616,17 @@ class Unity:
       for key, value in kwargs['params'].items():
         url += key + '=' + value + '&'
       url = url.strip('?&')
-    if self.checkMode or (resp and resp.status_code // 100 == 2):
+    if (resp is None) or (resp and resp.status_code // 100 == 2):
       if changed:
         self.changed = changed
-        changeContent =  {'HTTP_method': httpMethod}
-        changeContent['url'] = url
-        if args is not None:
+      if changed or msg:
+        changeContent =  {'HTTP_method': httpMethod, 'changed': changed, 'url': url}
+        if args:
           changeContent['args'] = args
-        if resp and resp.text:
+        if resp and resp.text:	# append response if it exists
           changeContent['response'] = json.loads(resp.text)
+        if msg:	# append messages if they exist
+          changeContent.update(msg)
         self.updateResults.append(changeContent)
     else:
       self.err = self._getMsg(resp)
@@ -665,77 +668,92 @@ class Unity:
     self._doPost(url, args, changed=False)
 
   def uploadLicense(self):
-    isUpdate = False
-    query = {'resource_type': 'license', 'fields': 'id, name, isInstalled, version, isValid, issued, expires, isPermanent'}
-    result = self.runQuery(query)
-    for entry in result['entries']:
-      if entry.get('content'):
-        if entry['content'].get('isInstalled'):
-          version = entry['content'].get('version')
-        else:
-          version = '0'
-        isUpdate = self.isLicenseUpdate(self.licensePath, entry['content'].get('id'), version) or isUpdate
-
-    if isUpdate:
-      url = self.apibase + '/upload/license'
-      if self.checkMode:
-        resp = None
-      else:
+    url = self.apibase + '/upload/license'
+    resp = None
+    msg = None
+    changed = self.isLicenseUpdate()
+    if changed:
+      if not self.checkMode:
         files = {'upload': open(self.licensePath, 'rb')}
         headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
         resp = self.session.post(url, files = files, headers=headers, verify=False)
-      self._changeResult(resp, url, {'licensePath': self.licensePath})
+    else:
+      msg = {'warn': 'All licenses are up-to-date. No upload will happen.'} 
+    self._changeResult(resp, url, args={'licensePath': self.licensePath}, changed=changed, msg=msg)
 
-  def isLicenseUpdate(self, licensePath, id, version='0'):
-    r = re.compile('^INCREMENT ' + id + ' EMCLM ' + '(?P<new_version>\d+\.?\d*)')
-    with open(licensePath, 'r') as f:
+  def isLicenseUpdate(self):
+    isUpdate = False
+    query = {'resource_type': 'license', 'fields': 'id, name, issued'}
+    result = self.runQuery(query)
+    oldIssued = {}
+    for entry in result['entries']:
+      if entry.get('content') and entry['content'].get('id'):
+          oldIssued[entry['content']['id'].upper()] = datetime.strptime(entry['content'].get('issued', '1970-01-01T00:00:00.000Z'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    reID = re.compile('^INCREMENT (?P<id>\w+)')
+    reIssued = re.compile('ISSUED=(?P<issued>\d{1,2}-[A-Z][a-z]{2}-\d{4})')
+    newIssued = {}
+    id = None
+    with open(self.licensePath, 'r') as f:
       for line in f:
-        m = r.search(line)
-        if m:
-          if m.group('new_version') > version:
-            self.updateResults.append({id + '_license_update': 'version ' + version + ' to version ' + m.group('new_version')})
-            return True
-    return False
+        if id is None:
+          m = reID.search(line)
+          if m:
+            id = m.group('id').upper()
+        else:
+          m = reIssued.search(line)
+          if m:
+            newIssued[id] = datetime.strptime(m.group('issued'), '%d-%b-%Y')
+            id = None
+
+    for id in newIssued.keys():
+      if newIssued[id] > oldIssued.get(id, datetime(1970,1,1)):
+        isUpdate = True
+    return isUpdate
 
   def runUpdates(self):
     for update in self.updates:
       self.runUpdate(update)
 
   def runUpdate(self, update):
+      paramKeys = ['language', 'timeout']
+      urlKeys = ['resource_type', 'id', 'action', 'attributes', 'filter'] + paramKeys
+      params = {key: update[key] for key in update if key in paramKeys}
+      args = {key: update[key] for key in update if key not in urlKeys}
+
       if not 'resource_type' in update:	# A resource must have the "resource_type" parameter
         self.err = {'error': 'Update has no "resource_type" parameter', 'update': update}
         self.exitFail()
 
       if 'id' in update:	# Update an existing resource instance with ID
+        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + update.get('action', 'modify')
         if 'action' not in update:
           update['action'] = 'modify' # default action
           if self.isDuplicate(update):
-            self.updateResults.append({'message': 'The existing instances already has the same attributes as the update operation. No update will happen.', 'update': update})
+            msg = {'warn': 'The existing instances already has the same attributes as the update operation. No update will happen.'}
+            self._changeResult(None, url, args, changed=False, msg=msg, params=params)
             return
         elif update['action'] == 'delete':
+          url = '/api/instances/' + update['resource_type'] + '/' + update['id']
           if not self.isDuplicate(update):
-            self.updateResults.append({'message': 'The instance to be deleted does not exist. No update will happen.', 'update': update})
+            msg = {'warn': 'The instance to be deleted does not exist. No update will happen.'}
+            self._changeResult(None, url, args, changed=False, httpMethod='DELETE', msg=msg, params=params)
             return
           else:
-            url = '/api/instances/' + update['resource_type'] + '/' + update['id']
             resp = self._doDelete(url)
             return
-        url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + update['action']
       else:
         if 'action' in update:	# Class-level action
           url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
         else:	
           update['action'] = 'create'	# Create a new instance
+          url = '/api/types/' + update['resource_type'] + '/instances'
           if self.checkMode:	# Only check duplicate entries during check mode. The users accept the consequences if they still want to add the new instance
             duplicates = self.isDuplicate(update)
             if duplicates:
-              self.updateResults.append({'message': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'update': update, 'duplicates': duplicates})
+              msg = {'warn': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'duplicates': duplicates}
+              self._changeResult(None, url, args, changed=False, msg=msg, params=params)
               return
-          url = '/api/types/' + update['resource_type'] + '/instances'
-      paramKeys = ['language', 'timeout']
-      urlKeys = ['resource_type', 'id', 'action', 'attributes', 'filter'] + paramKeys
-      params = {key: update[key] for key in update if key in paramKeys}
-      args = {key: update[key] for key in update if key not in urlKeys}
   
       resp = self._doPost(url, args, params = params)
 
