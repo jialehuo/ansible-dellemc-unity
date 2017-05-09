@@ -608,7 +608,7 @@ class Unity:
     resp = self.session.get(self.apibase + url, params=params, **kwargs)
     return self._getResult(resp, **kwargs)
 
-  def _changeResult(self, resp, url, args=None, changed=True, httpMethod='POST', msg=None, **kwargs):
+  def _changeResult(self, resp, url, args=None, changed=True, msg=None, **kwargs):
     if resp:
       url = resp.url
     elif 'params' in kwargs:	# Reconstruct URL with parameters
@@ -620,7 +620,7 @@ class Unity:
       if changed:
         self.changed = changed
       if changed or msg:
-        changeContent =  {'HTTP_method': httpMethod, 'changed': changed, 'url': url}
+        changeContent =  {'changed': changed}
         if args:
           changeContent['args'] = args
         if resp and resp.text:	# append response if it exists
@@ -635,7 +635,7 @@ class Unity:
         self.err['args'] = args
       self.exitFail()
 
-  def _doPost(self, url, args, changed=True, **kwargs):
+  def _doPost(self, url, args, changed=True, msg=None, **kwargs):
     if self.checkMode:
       resp = None
     else:
@@ -643,9 +643,9 @@ class Unity:
         kwargs = {}
       kwargs.update({'headers': self.headers, 'verify': False})
       resp = self.session.post(self.apibase + url, json = args, **kwargs)
-    self._changeResult(resp, url, args, changed=changed, **kwargs)
+    self._changeResult(resp, url, args, changed=changed, msg=msg, **kwargs)
 
-  def _doDelete(self, url, **kwargs):
+  def _doDelete(self, url, msg=None, **kwargs):
     if self.checkMode:
       resp = None
     else:
@@ -653,7 +653,7 @@ class Unity:
         kwargs = {}
       kwargs.update({'headers': self.headers, 'verify': False})
       resp = self.session.delete(self.apibase + url, **kwargs)
-    self._changeResult(resp, url, httpMethod='DELETE', **kwargs)
+    self._changeResult(resp, url, msg=msg, **kwargs)
 
   def startSession(self):
     url = '/api/instances/system/0'
@@ -670,7 +670,7 @@ class Unity:
   def uploadLicense(self):
     url = self.apibase + '/upload/license'
     resp = None
-    msg = None
+    msg = {'resource_type': 'license', 'action': 'upload'}
     changed = self.isLicenseUpdate()
     if changed:
       if not self.checkMode:
@@ -678,7 +678,7 @@ class Unity:
         headers = {'X-EMC-REST-CLIENT':'true', 'EMC-CSRF-TOKEN': self.headers['EMC-CSRF-TOKEN']}
         resp = self.session.post(url, files = files, headers=headers, verify=False)
     else:
-      msg = {'warn': 'All licenses are up-to-date. No upload will happen.'} 
+      msg.update({'warn': 'All licenses are up-to-date. No upload will happen.'})
     self._changeResult(resp, url, args={'licensePath': self.licensePath}, changed=changed, msg=msg)
 
   def isLicenseUpdate(self):
@@ -687,8 +687,8 @@ class Unity:
     result = self.runQuery(query)
     oldIssued = {}
     for entry in result['entries']:
-      if entry.get('content') and entry['content'].get('id'):
-          oldIssued[entry['content']['id'].upper()] = datetime.strptime(entry['content'].get('issued', '1970-01-01T00:00:00.000Z'), '%Y-%m-%dT%H:%M:%S.%fZ')
+      if entry.get('id'):
+          oldIssued[entry['id'].upper()] = datetime.strptime(entry.get('issued', '1970-01-01T00:00:00.000Z'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
     reID = re.compile('^INCREMENT (?P<id>\w+)')
     reIssued = re.compile('ISSUED=(?P<issued>\d{1,2}-[A-Z][a-z]{2}-\d{4})')
@@ -720,23 +720,29 @@ class Unity:
       urlKeys = ['resource_type', 'id', 'action', 'attributes', 'filter'] + paramKeys
       params = {key: update[key] for key in update if key in paramKeys}
       args = {key: update[key] for key in update if key not in urlKeys}
+      msg = {}
 
-      if not 'resource_type' in update:	# A resource must have the "resource_type" parameter
+      if 'resource_type' in update:	# A resource must have the "resource_type" parameter
+        msg['resource_type'] = update['resource_type']
+      else:
         self.err = {'error': 'Update has no "resource_type" parameter', 'update': update}
         self.exitFail()
 
       if 'id' in update:	# Update an existing resource instance with ID
+        msg['id'] = update['id']
         url = '/api/instances/' + update['resource_type'] + '/' + update['id'] + '/action/' + update.get('action', 'modify')
         if 'action' not in update:
           update['action'] = 'modify' # default action
+          msg['action'] = update['action']
           if self.isDuplicate(update):
-            msg = {'warn': 'The existing instances already has the same attributes as the update operation. No update will happen.'}
+            msg['warn'] = 'The existing instances already has the same attributes as the update operation. No update will happen.'
             self._changeResult(None, url, args, changed=False, msg=msg, params=params)
             return
         elif update['action'] == 'delete':
+          msg['action'] = update['action']
           url = '/api/instances/' + update['resource_type'] + '/' + update['id']
           if not self.isDuplicate(update):
-            msg = {'warn': 'The instance to be deleted does not exist. No update will happen.'}
+            msg['warn'] = 'The instance to be deleted does not exist. No update will happen.'
             self._changeResult(None, url, args, changed=False, httpMethod='DELETE', msg=msg, params=params)
             return
           else:
@@ -747,15 +753,16 @@ class Unity:
           url = '/api/types/' + update['resource_type'] + '/action/' + update['action']
         else:	
           update['action'] = 'create'	# Create a new instance
+          msg['action'] = update['action']
           url = '/api/types/' + update['resource_type'] + '/instances'
           if self.checkMode:	# Only check duplicate entries during check mode. The users accept the consequences if they still want to add the new instance
             duplicates = self.isDuplicate(update)
             if duplicates:
-              msg = {'warn': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'duplicates': duplicates}
+              msg.update({'warn': 'Instances with the same attributes already exist for the creation operation. Create the new instance at your own risk.', 'duplicates': duplicates})
               self._changeResult(None, url, args, changed=False, msg=msg, params=params)
               return
-  
-      resp = self._doPost(url, args, params = params)
+      msg['action'] = update['action'] 
+      resp = self._doPost(url, args, params = params, msg=msg)
 
   def isDuplicate(self, update):
     # If this is an password update, then only proceed when the password is different from the old one
@@ -811,13 +818,13 @@ class Unity:
     result = self.runQuery(query)
    
     if update['action'] == 'modify':	# For modify action, compare queried attributes and update attributes 
-      content = result['entries'][0]['content']
+      content = result
       for queryAttr, updateAttr in attributes.items():
         if updateAttr in update and self.getDottedValue(content, queryAttr) != self.getDottedValue(update, updateAttr):
           return False
       else:
         return True
-    elif result['entryCount'] > 0:	# For all other actions, the updated resource is a duplicate if the query returns some entries 
+    elif len(result['entries']) > 0:	# For all other actions, the updated resource is a duplicate if the query returns some entries 
       return result['entries']
     else:
       return None
@@ -876,13 +883,14 @@ class Unity:
         params['with_entrycount'] = 'true'	# By default, return the entryCount response component in the response data.
       resp = self._doGet(url, params)
       r = json.loads(resp.text)
-      result = {'query': query, 'url': resp.url}
+      result = {'resource_type': query['resource_type']}
       if 'id' in query:
-        result['entries'] = [r]
-        result['entryCount'] = 1
+        result['id'] = query['id']
+        result.update(r['content'])
       else:
-        result['entries'] = r['entries']
-        result['entryCount'] = r.get('entryCount', len(r['entries']))
+        result['entries'] = []
+        for entry in r['entries']:
+          result['entries'].append(entry['content'])
       return result
 
   def run(self):
