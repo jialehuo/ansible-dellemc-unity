@@ -739,14 +739,14 @@ class Unity:
             self._changeResult(None, url, args, changed=False, msg=msg, params=params)
             return
         elif update['action'] == 'delete':
-          msg['action'] = update['action']
+          msg = update
           url = '/api/instances/' + update['resource_type'] + '/' + update['id']
           if not self.isDuplicate(update):
             msg['warn'] = 'The instance to be deleted does not exist. No update will happen.'
-            self._changeResult(None, url, args, changed=False, httpMethod='DELETE', msg=msg, params=params)
+            self._changeResult(None, url, args, changed=False, msg=msg, params=params)
             return
           else:
-            resp = self._doDelete(url)
+            resp = self._doDelete(url, msg)
             return
       else:
         if 'action' in update:	# Class-level action
@@ -824,8 +824,10 @@ class Unity:
           return False
       else:
         return True
-    elif len(result['entries']) > 0:	# For all other actions, the updated resource is a duplicate if the query returns some entries 
+    elif 'entries' in result and len(result['entries']) > 0:	# For class-level queries, the updated resource is a duplicate if the query returns some entries 
       return result['entries']
+    elif 'id' in result:	# For instance level queries, the updated resource is a duplicate if the query result contains the 'id' field
+      return result 
     else:
       return None
 
@@ -915,10 +917,10 @@ def main():
         argument_spec=dict(
             unity_hostname=dict(default=None, required=True, type='str'),
             unity_username=dict(default='admin', type='str'),
-            unity_password=dict(default='Password123#', type='str', no_log=True),
+            unity_password=dict(default='Password123#', type='str'), #, no_log=True),
             unity_license_path = dict(default=None, type='path'),
             unity_updates = dict(default=None, type='list'),
-            unity_password_updates = dict(default=None, type='list'),
+            unity_password_updates = dict(default=None, type='list'), #, no_log=True),
             unity_queries = dict(default=None, type='list')
         ),
         supports_check_mode=True

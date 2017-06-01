@@ -3,7 +3,7 @@
   tasks:
     - name: Initial setup
       dellemc_unity:
-        unity_hostname: "192.168.0.202"
+        unity_hostname: "192.168.0.200"
         unity_username: admin
         unity_password: Password123#
         unity_updates:
