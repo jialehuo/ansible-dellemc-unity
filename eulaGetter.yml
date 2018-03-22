@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  tasks:
+    - name: is EULA accepted
+      dellemc_unity:
+        unity_hostname: "192.168.70.217"
+        unity_username: admin
+        unity_password: Password123!
+        unity_queries:
+#TODO: ask about EULA
+          - {'resource_type': 'system', fields: 'isEULAAccepted'}
+      register: result
+    - debug: var=result
