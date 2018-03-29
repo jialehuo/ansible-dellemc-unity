@@ -3,12 +3,14 @@
   tasks:
     - name: Pool Creation and Updates
       dellemc_unity:
-        unity_hostname: "10.245.16.171"
+        unity_hostname: "192.168.70.217"
         unity_username: admin
         unity_password: Password123!
         unity_updates:
-          - {resource_type: pool, action: 'recommendAutoConfiguration'}
+          - {resource_type: pool, name: "testPoolByPlaybook", description: "This Pool was created by Playbook" ,addPoolUnitParameters: [{poolUnit: {id: "vdisk_1"}},{poolUnit: {id: "vdisk_2"}} ]}
+
+          # - {resource_type: pool, action: 'recommendAutoConfiguration'}
           # - {resource_type: pool, name: 'performancePool', 'addRaidGroupParameters': [{"dskGroup" : {"id" : "dg_3"}, "numDisks" : 6, "raidType" : 48879, "stripeWidth" : 0}]}
-          # - {resource_type: pool, id: pool_1, name: 'highPerformancePool', description: 'high performance pool'}
+          #- {resource_type: pool, id: pool_1, name: 'highPerformancePool', description: 'high performance pool'}
       register: result
     - debug: var=result
