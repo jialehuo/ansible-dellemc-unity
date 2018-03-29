@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: is EULA accepted
+      dellemc_unity:
+        unity_hostname: {{host}}
+        unity_username: {username}
+        unity_password: {password}
+        unity_queries:
+          - {'resource_type': 'system', fields: 'isEULAAccepted'}
+      register: result
+    - debug: var=result
