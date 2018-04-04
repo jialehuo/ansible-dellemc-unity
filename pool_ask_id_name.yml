@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: ask pool's id and name
+      dellemc_unity:
+        unity_hostname: 192.168.70.217
+        unity_username: admin
+        unity_password: Password123!
+        unity_queries:
+          - {'resource_type': 'pool', fields: 'id,name'}
+      register: result
+    - debug: var=result
