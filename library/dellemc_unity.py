@@ -562,6 +562,7 @@ class Unity:
         self.hostname = module.params['unity_hostname']
         self.username = module.params['unity_username']
         self.password = module.params['unity_password']
+
         self.licensePath = module.params['unity_license_path']
         self.updates = module.params['unity_updates']
         self.passwordUpdates = module.params['unity_password_updates']
@@ -604,8 +605,7 @@ class Unity:
         self.err = self._getMsg(resp)
         self.err.update({'url': resp.url})
         if resp.status_code == 401 and kwargs.get('auth'):  # Unauthorized password
-            self.err['messages'][0]['en-US'] = "Authentication error for User '" + kwargs[
-                'auth'].username + "'"  # Update error message
+            self.err['messages'][0]['en-US'] = "Authentication error for User '" + kwargs['auth'].username + "'"  # Update error message
         self.exitFail()
 
     def _doGet(self, url, params=None, **kwargs):
@@ -744,8 +744,8 @@ class Unity:
                 update['action'] = 'modify'  # default action
                 msg['action'] = update['action']
                 if self.isDuplicate(update):
-                    msg[
-                        'warn'] = 'The existing instances already has the same attributes as the update operation. No update will happen.'
+                    msg['warn'] = 'The existing instances already has the same attributes as the update operation. ' \
+                                  'No update will happen.'
                     self._changeResult(None, url, args, changed=False, msg=msg, params=params)
                     return
             elif update['action'] == 'delete':
@@ -786,7 +786,6 @@ class Unity:
                   "addPoolUnitParameters": poolUnitParameters}
         self.runUpdate(update)
 
-
     def isDuplicate(self, update):
         # If this is an password update, then only proceed when the password is different from the old one
         if 'password' in update and 'oldPassword' in update:
@@ -800,8 +799,8 @@ class Unity:
         attrs = None
         filter = None
 
-        if update['action'] in ['create',
-                                'modify']:  # Only create or modify actions need to compare attributes with existing resource instances
+        if update['action'] in ['create', 'modify']:  # Only create or modify actions
+            # need to compare attributes with existing resource instances
             # First, use the default, hard-coded attributes
             attrs = actionAttribs[update['action']].get(update['resource_type'])
 
@@ -852,14 +851,13 @@ class Unity:
                     return False
             else:
                 return True
-        elif 'entries' in result and len(result[
-                                             'entries']) > 0:  # For class-level queries, the updated resource is a duplicate if the query returns some entries
+        elif 'entries' in result and len(result['entries']) > 0:  # For class-level queries,
+            #  the updated resource is a duplicate if the query returns some entries
             return result['entries']
         elif 'id' in result:  # For instance level queries, the updated resource is a duplicate if the query result contains the 'id' field
             return result
         else:
             return None
-
 
     def getDottedValue(self, dictionary, dottedKey, separator='.'):
         value = dictionary
@@ -870,7 +868,6 @@ class Unity:
                 break
         return value
 
-
     def processFilterValue(self, value):
         if isinstance(value, str):
             value = ' eq "' + value + '"'
@@ -878,11 +875,9 @@ class Unity:
             value = ' eq ' + str(value)
         return value
 
-
     def runPasswordUpdates(self):
         for update in self.passwordUpdates:
             self.runPasswordUpdate(update)
-
 
     def runPasswordUpdate(self, update):
         username = update.get('username')
@@ -894,12 +889,10 @@ class Unity:
         update = {'resource_type': 'user', 'id': 'user_' + username, 'password': newPassword, 'oldPassword': password}
         self.runUpdate(update)
 
-
     def runQueries(self):
         for query in self.queries:
             result = self.runQuery(query)
             self.queryResults.append(result)
-
 
     def runQuery(self, query):
         if not 'resource_type' in query:  # A query must have the "resource_type" parameter
@@ -919,8 +912,7 @@ class Unity:
         if 'compact' not in params:
             params['compact'] = 'true'  # By default, omit metadata from each instance in the query response
         if 'id' not in query and 'with_entrycount' not in params:  # Collection query without the 'with_entrycount' parameter
-            params[
-                'with_entrycount'] = 'true'  # By default, return the entryCount response component in the response data.
+            params['with_entrycount'] = 'true'  # By default, return the entryCount response component in the response data.
         resp = self._doGet(url, params)
         r = json.loads(resp.text)
         result = {'resource_type': query['resource_type']}
@@ -932,7 +924,6 @@ class Unity:
             for entry in r['entries']:
                 result['entries'].append(entry['content'])
         return result
-
 
     def run(self):
         self.startSession()
