@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Updates and queries
+      dellemc_unity:
+        unity_hostname: "192.168.0.200"
+        unity_username: admin
+        unity_password: Password123!
+        unity_updates:
+          - {resource_type: user, id: 'user_test1', action: 'delete'}
+      register: result
+    - debug: var=result
