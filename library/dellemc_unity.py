@@ -494,7 +494,8 @@ unity_update_results:
             type: string
 
 '''
-import common_functions   #TODO: check it
+
+import library.common_functions  # TODO: check it
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 from datetime import datetime
