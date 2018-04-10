@@ -775,6 +775,7 @@ class Unity:
                         return
         msg['action'] = update['action']
         resp = self._doPost(url, args, params=params, msg=msg)
+        return resp
 
     def createPool(self):
         params = self.poolCreator
@@ -950,10 +951,12 @@ def main():
         unity_hostname=dict(default=None, required=True, type='str'),
         unity_username=dict(default='admin', type='str'),
         unity_password=dict(default='Password123#', type='str'),  # , no_log=True),
-        unity_license_path=dict(default=None, type='path'),
-        unity_updates=dict(default=None, type='list'),
-        unity_password_updates=dict(default=None, type='list'),  # , no_log=True),
         unity_queries=dict(default=None, type='list'),
+        unity_updates=dict(default=None, type='list'),
+
+
+        unity_license_path=dict(default=None, type='path'),
+        unity_password_updates=dict(default=None, type='list'),  # , no_log=True),
         create_pool=dict(default=None, required=False, type='dict')
 
     )
