@@ -494,7 +494,7 @@ unity_update_results:
             type: string
 
 '''
-
+from library import common_functions
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 from datetime import datetime
@@ -777,15 +777,36 @@ class Unity:
         resp = self._doPost(url, args, params=params, msg=msg)
         return resp
 
+    def getModelOfUnity(self):
+        resp = self.runQuery({'resource_type': 'system', "fields": 'model'})
+        model = resp['entries'][0]['model']  # get model of Unity from JSON response
+        return model
+
     def createPool(self):
         params = self.poolCreator
+        updateRequest = {'resource_type': 'pool'}
+        model = self.getModelOfUnity()
+        if model == 'UnityVSA':
+            requiredParametrs = {'name', 'pool_unit_parametrs'}
+            if not common_functions.checkRequiredParameters(params, requiredParametrs):
+                self.module.fail_json(changed=False, exception="Input all required parameters for your system model",
+                                      required_parametrs=requiredParametrs)
+            name = params['name']
+            poolUnitParameters = params['pool_unit_params']
+            updateRequest.update({'name': name})
+            updateRequest.update({'poolUnitParameters': poolUnitParameters})
+            optionalParametrs = {'type', 'isFASTVpSheduleEnabled', 'description'}  # TODO: 10.04.2018 19:26 add all params
+            if not common_functions.checkOptionalParametrs(params, requiredParametrs, optionalParametrs):
+                self.module.exit_json(changed=False, warning="You have unsupported parameters",
+                                      supported_optional_parametrs=optionalParametrs)
+            for key in optionalParametrs:
+                if params[key]:
+                    updateRequest.update({key: params[key]})
 
-        name = params['name']
-        description = params['description']
-        poolUnitParameters = params['pool_unit_params']
-        update = {'resource_type': 'pool', 'name': name, 'description': description,
-                  "addPoolUnitParameters": poolUnitParameters}
-        self.runUpdate(update)
+            self.runUpdate(updateRequest)
+
+        else:
+            self.module.fail_json(changed=False, exception="I don't work with such Unity yet", unity_model=model)
 
     def isDuplicate(self, update):
         # If this is an password update, then only proceed when the password is different from the old one
@@ -953,7 +974,6 @@ def main():
         unity_password=dict(default='Password123#', type='str'),  # , no_log=True),
         unity_queries=dict(default=None, type='list'),
         unity_updates=dict(default=None, type='list'),
-
 
         unity_license_path=dict(default=None, type='path'),
         unity_password_updates=dict(default=None, type='list'),  # , no_log=True),
