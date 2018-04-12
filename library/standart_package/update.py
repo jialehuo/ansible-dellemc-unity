@@ -1,4 +1,4 @@
-def runUpdate(self, update):
+def runUpdate(update):
     paramKeys = ['language', 'timeout']
     urlKeys = ['resource_type', 'id', 'action', 'attributes', 'filter'] + paramKeys
     params = {key: update[key] for key in update if key in paramKeys}
