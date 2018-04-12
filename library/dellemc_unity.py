@@ -495,7 +495,9 @@ unity_update_results:
 
 '''
 
-from dellemc_unity_lib import common_functions
+#!/usr/bin/python
+
+from ansible.module_utils.dellemc_unity import common_functions
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 from datetime import datetime
