@@ -495,7 +495,7 @@ unity_update_results:
 
 '''
 
-import library.common_functions  # TODO: check it
+from dellemc_unity_lib import common_functions
 import requests, json, re
 from ansible.module_utils.basic import AnsibleModule
 from datetime import datetime
@@ -787,23 +787,25 @@ class Unity:
         params = self.poolCreator
         updateRequest = {'resource_type': 'pool'}
         model = self.getModelOfUnity()
+
         if model == 'UnityVSA':
-            requiredParametrs = {'name', 'pool_unit_parametrs'}
-            if not common_functions.checkRequiredParameters(params, requiredParametrs):
-                self.module.fail_json(changed=False, exception="Input all required parameters for your system model",
-                                      required_parametrs=requiredParametrs)
+            requiredParameters = {'name', 'pool_unit_params'}
+            optionalParameters = {'type', 'isFASTVpSheduleEnabled', 'description'}
+            if not common_functions.checkParameters(params, requiredParameters, optionalParameters):
+                self.module.fail_json(changed=False, msg="Error in function create_pool",
+                                      exception="You haven't inputted all required parameters or have inputted"
+                                                " unsupported optional0 parameter(s)",
+                                      required_parametrs_for_command=requiredParameters,
+                                      optional_parametrs=optionalParameters)
+
             name = params['name']
             poolUnitParameters = params['pool_unit_params']
             updateRequest.update({'name': name})
-            updateRequest.update({'poolUnitParameters': poolUnitParameters})
-            optionalParametrs = {'type', 'isFASTVpSheduleEnabled', 'description'}  # TODO: 10.04.2018 19:26 add all params
-            if not common_functions.checkOptionalParametrs(params, requiredParametrs, optionalParametrs):
-                self.module.exit_json(changed=False, warning="You have unsupported parameters",
-                                      supported_optional_parametrs=optionalParametrs)
-            for key in optionalParametrs:
-                if params[key]:
-                    updateRequest.update({key: params[key]})
+            updateRequest.update({'addPoolUnitParameters': poolUnitParameters})
 
+            for key in optionalParameters:
+                if params.get(key):
+                    updateRequest.update({key: params.get(key)})
             self.runUpdate(updateRequest)
 
         else:
