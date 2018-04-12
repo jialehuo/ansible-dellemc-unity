@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: delete iscsiPortal
+      dellemc_unity:
+        unity_hostname: 192.168.70.217
+        unity_username: admin
+        unity_password: Password123!
+        unity_updates:
+          - {resource_type: iscsiPortal, id: "if_11" , action: "delete"}
+      register: result
+    - debug: var=result

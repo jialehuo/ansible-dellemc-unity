@@ -939,7 +939,7 @@ class Unity:
 
         if self.iscsiCreator:
             print('yeap')
-            iscsi.create_iscsi_potal(self.iscsiCreator)
+            #iscsi.create_iscsi_potal(self.iscsiCreator)
 
         if self.passwordUpdates:
             self.runPasswordUpdates()
@@ -964,7 +964,7 @@ def main():
         unity_password_updates=dict(default=None, type='list'),  # , no_log=True),
         unity_queries=dict(default=None, type='list'),
         create_pool=dict(default=None, required=False, type='dict'),
-        create_iscsiPortal=dict(default=None, required=False, type='dict')
+        create_iscsiPortal = dict(default=None, required=False, type='dict')
 
     )
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
