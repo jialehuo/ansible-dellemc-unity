@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  tasks:
+    - name: delete pool
+      pool:
+        delete:
+          id: pool_14
+      register: result
+    - debug: var=result
