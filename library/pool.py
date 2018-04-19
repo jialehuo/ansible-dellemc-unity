@@ -21,7 +21,7 @@ def create(params, unity):
 
 
 def delete(params, unity):
-    if id not in params:
+    if 'id' not in params:
         return False, 'you must input id'
     pool_id = params['id']
     unity.update('delete', 'pool', {'id': pool_id})
