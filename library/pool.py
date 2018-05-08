@@ -1,9 +1,7 @@
-# TODO: import important files
 
-from ansible.module_utils.dellemc_unity import common_functions
-from ansible.module_utils.dellemc_unity.unity import Unity
-from ansible.module_utils.dellemc_unity import module
-from ansible.module_utils.dellemc_unity.ansible_function import AnsibleFunction
+from dellemc_unity_sdk.unity import Unity
+from dellemc_unity_sdk import runner
+from dellemc_unity_sdk import validator
 
 
 def create(params, unity):
@@ -29,7 +27,7 @@ def delete(params, unity):
 
 
 def main():
-    module.run([AnsibleFunction('create', create), AnsibleFunction('delete', delete)])
+    runner.run([{'function':create}, {'function':delete}])
 
 
 if __name__ == '__main__':
