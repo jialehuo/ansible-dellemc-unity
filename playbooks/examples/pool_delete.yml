@@ -3,6 +3,10 @@
   tasks:
     - name: delete pool
       pool:
+       login:
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
         delete:
           id: pool_14
       register: result
