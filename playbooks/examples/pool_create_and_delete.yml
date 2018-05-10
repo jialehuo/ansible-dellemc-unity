@@ -4,7 +4,10 @@
     - name: Pool Creation and Updates
       pool:
         login: {host: '192.168.70.217', username: 'admin', password: 'Password123!'}
-        delete:
-          id: pool_22
+        create:
+          name: pool0805
+          addPoolUnitParameters: [{'poolUnit' : {"id" : "vdisk_1"}},{'poolUnit' : {"id" : "vdisk_2"}}]
+        #delete:
+          #id: pool_22
       register: result
     - debug: var=result
