@@ -1,16 +1,16 @@
 from ansible.module_utils.basic import AnsibleModule
 import sys, os
 
-sys.path.append('/home/vksychev/emc/ansible-dellemc-unity/library/')
+sys.path.append('/home/ansible/Vadim/new/my_sdk/dellemc-unity-sdk/dellemc-unity-sdk')
 
 from dellemc_unity import Unity
-from common_functions import refactor_params
+from common_functions import refactor_params,TemplateException
 
 
 class Iscsi(Unity):
 
     def __init__(self, module):
-        super().__init__(module)
+        super(Iscsi,self).__init__(module)
         self.params = module.params
         self.create_spec = {
             'ethernetPort': {'default': None, 'required': True, 'type': 'dict'},
@@ -32,7 +32,7 @@ class Iscsi(Unity):
         self.runUpdate(data)
 
     def _start_create(self):
-        params = self.params['create']
+        params = self.params['create'][0]
         if 'interfaces' in params:
             for key in params:
                 self.create(params[key])
@@ -40,7 +40,7 @@ class Iscsi(Unity):
             self.create(params)
 
     def _start_delete(self):
-        params = self.params['delete']
+        params = self.params['delete'][0]
         if 'interfaces' in params:
             for key in params:
                 self.delete(params[key])
@@ -49,17 +49,7 @@ class Iscsi(Unity):
 
     def run(self):
         self.startSession()
-        for task in self.params:
-            if task is 'create':
-                self._start_create()
-                continue
-            if task is 'delete':
-                self._start_delete()
-                continue
-            if task is 'update':
-                self._start_create()
-                continue
-
+        self._start_create()
         self.stopSession()
 
 
@@ -70,15 +60,15 @@ def main():
         unity_password=dict(default='Password123#', type='str'),
         unity_license_path=dict(default=None, type='path'),
         unity_password_updates=dict(default=None, type='list'),
-        create=dict(default=None, required=False, type='dict'),
-        delete=dict(default=None, required=False, type='dict'),
-        update=dict(default=None, required=False, type='dict')
+        create=dict(default=None, required=False, type='list'),
+        delete=dict(default=None, required=False, type='list'),
+        update=dict(default=None, required=False, type='list')
     )
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
-
     unity = Iscsi(module)
-
+	
+    #module.fail_json(msg=module.params['create'][0])
     unity.run()
     if unity.err:
         unity.exitFail()
