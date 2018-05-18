@@ -26,7 +26,7 @@ class Iscsi(Unity):
         self.runUpdate(data)
 
     def delete(self, data):
-        data = refactor_params(self.delete_spec, data)
+        data = refactor_params(self.delete_spec, data,self.module)
         data['resource_type'] = 'iscsiPortal'
         data['action'] = 'delete'
         self.runUpdate(data)
