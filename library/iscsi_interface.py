@@ -32,12 +32,10 @@ class Iscsi(Unity):
         self.runUpdate(data)
 
     def _start_create(self):
-        params = self.params['create'][0]
-        if 'interfaces' in params:
-            for key in params:
-                self.create(params[key])
-        else:
-            self.create(params)
+        params = self.params['create']
+        for task in params:
+            self.create(task)
+
 
     def _start_delete(self):
         params = self.params['delete'][0]
@@ -74,7 +72,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     unity = Iscsi(module)
 
-    # module.fail_json(msg=module.params['create'][0])
+    #module.fail_json(msg=module.params['create'])
     unity.run()
     if unity.err:
         unity.exitFail()
