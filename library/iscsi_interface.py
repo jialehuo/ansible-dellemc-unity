@@ -10,7 +10,7 @@ from common_functions import refactor_params
 class Iscsi(Unity):
 
     def __init__(self, module):
-        super(Iscsi,self).__init__(module)
+        super(Iscsi, self).__init__(module)
         self.params = module.params
         self.create_spec = {
             'ethernetPort': {'default': None, 'required': True, 'type': 'dict'},
@@ -21,12 +21,12 @@ class Iscsi(Unity):
         self.delete_spec = {'id': {'default': None, 'required': True, 'type': 'str'}}
 
     def create(self, data):
-        data = refactor_params(self.create_spec, data)
+        data = refactor_params(self.create_spec, data, self.module)
         data['resource_type'] = 'iscsiPortal'
         self.runUpdate(data)
 
     def delete(self, data):
-        data = refactor_params(self.delete_spec, data,self.module)
+        data = refactor_params(self.delete_spec, data, self.module)
         data['resource_type'] = 'iscsiPortal'
         data['action'] = 'delete'
         self.runUpdate(data)
@@ -73,8 +73,8 @@ def main():
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     unity = Iscsi(module)
-	
-    #module.fail_json(msg=module.params['create'][0])
+
+    # module.fail_json(msg=module.params['create'][0])
     unity.run()
     if unity.err:
         unity.exitFail()
