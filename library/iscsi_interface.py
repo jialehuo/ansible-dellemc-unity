@@ -4,7 +4,7 @@ import sys, os
 sys.path.append('/home/ansible/Vadim/new/my_sdk/dellemc-unity-sdk/dellemc-unity-sdk')
 
 from dellemc_unity import Unity
-from common_functions import refactor_params,TemplateException
+from common_functions import refactor_params
 
 
 class Iscsi(Unity):
@@ -49,7 +49,13 @@ class Iscsi(Unity):
 
     def run(self):
         self.startSession()
-        self._start_create()
+        if self.params['create']:
+            self._start_create()
+        if self.params['delete']:
+            self._start_delete()
+        if self.params['update']:
+            self._start_create()
+
         self.stopSession()
 
 
