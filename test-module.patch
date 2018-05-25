@@ -1,0 +1,67 @@
+diff --git a/hacking/test-module b/hacking/test-module
+index 7928ca9b4b..86971391f3 100755
+--- a/hacking/test-module
++++ b/hacking/test-module
+@@ -61,7 +61,8 @@ def parse():
+     parser.add_option('-m', '--module-path', dest='module_path',
+         help="REQUIRED: full path of module source to execute")
+     parser.add_option('-a', '--args', dest='module_args', default="",
+-        help="module argument string")
++        help="""module argument string. Use first symbol '@' - argument is read from a YAML file (JSON is a subset of YAML).
++Use first symbol '{' - argument is a YAML document (not a file)""")
+     parser.add_option('-D', '--debugger', dest='debugger',
+         help="path to python debugger (e.g. /usr/bin/pdb)")
+     parser.add_option('-I', '--interpreter', dest='interpreter',
+@@ -85,10 +86,16 @@ def parse():
+ def write_argsfile(argstring, json=False):
+     """ Write args to a file for old-style module's use. """
+     argspath = os.path.expanduser("~/.ansible_test_module_arguments")
++    print("* including generated module args, if any, saving to: %s" % argspath)
+     argsfile = open(argspath, 'w')
+     if json:
+-        args = parse_kv(argstring)
++        if type(argstring) == 'dict':
++            args = parse_kv(argstring)
++        else:
++            args = argstring
++
+         argstring = jsonify(args)
++
+     argsfile.write(argstring)
+     argsfile.close()
+     return argspath
+@@ -126,7 +133,7 @@ def boilerplate_module(modfile, args, interpreters, check, destfile):
+     # default selinux fs list is pass in as _ansible_selinux_special_fs arg
+     complex_args['_ansible_selinux_special_fs'] = C.DEFAULT_SELINUX_SPECIAL_FS
+     complex_args['_ansible_tmp'] = C.DEFAULT_LOCAL_TMP
+-    comlpex_args['_ansible_keep_remote_files'] = C.DEFAULT_KEEP_REMOTE_FILES
++    complex_args['_ansible_keep_remote_files'] = C.DEFAULT_KEEP_REMOTE_FILES
+ 
+     if args.startswith("@"):
+         # Argument is a YAML file (JSON is a subset of YAML)
+@@ -168,7 +175,7 @@ def boilerplate_module(modfile, args, interpreters, check, destfile):
+     modfile2.close()
+     modfile = modfile2_path
+ 
+-    return (modfile2_path, modname, module_style)
++    return (modfile2_path, modname, module_style, complex_args)
+ 
+ 
+ def ansiballz_setup(modfile, modname, interpreters):
+@@ -250,14 +257,14 @@ def main():
+ 
+     options, args = parse()
+     interpreters = get_interpreters(options.interpreter)
+-    (modfile, modname, module_style) = boilerplate_module(options.module_path, options.module_args, interpreters, options.check, options.filename)
++    (modfile, modname, module_style, module_args) = boilerplate_module(options.module_path, options.module_args, interpreters, options.check, options.filename)
+ 
+     argspath = None
+     if module_style not in ('new', 'ansiballz'):
+         if module_style in ('non_native_want_json', 'binary'):
+             argspath = write_argsfile(options.module_args, json=True)
+         elif module_style == 'old':
+-            argspath = write_argsfile(options.module_args, json=False)
++            argspath = write_argsfile(module_args, json=True)
+         else:
+             raise Exception("internal error, unexpected module style: %s" % module_style)
+ 
