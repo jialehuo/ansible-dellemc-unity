@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from dellemc_unity_sdk.unity import Unity
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import validator
@@ -21,6 +23,7 @@ def create(params, unity):
                      'snapSpaceHarvestHighThreshold', 'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
                      'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled', 'type'
                      }
+
     model = _get_model(unity)
     if model == 'UnityVSA':
         params_types = {'required': {'name', 'addPoolUnitParameters'},
@@ -34,7 +37,7 @@ def create(params, unity):
             if params.get(parameter):
                 request_params.update({parameter: params.get(parameter)})
         reply = unity.update('create', 'pool', request_params)
-        return True, {'pool': {'id': reply['entries'][0]['id']}}
+        return True, ''  # {'pool': {'id': reply['entries'][0]['id']}} #TODO: remake it in framework
     else:
         return False, 'this model' + model + 'unsupported yet'
 
@@ -69,8 +72,9 @@ def modify(params, unity):
 
 
 def main():
-    runner.run([{'function': create}, {'function': modify}, {'function': delete}])
+    runner.run([{'function': create}])
 
 
+# , {'function': modify}, {'function': delete}
 if __name__ == '__main__':
     main()
