@@ -1,18 +1,18 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nasServer creation and deletion
-      nasServer:
+    - name: nfsServer creation and deletion
+      fileInterface:
         #login:
           #host: "{{ host }}"
           #username: "{{ username }}"
           #password: "{{ password }}"
         create:
-          name: nasServerOnCoolPool
-          homeSP: {id: 'spa'}
-          pool: {id: 'pool_8'}
+          nasServer: nasserver_2
+          ipPort: eth0
+          IpAddress: {'id': 'ipv4'}
         delete:
-          id: nasserver_1
+          id: fileInterface_2
       register: result
     - debug: var=result
 
