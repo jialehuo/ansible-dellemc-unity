@@ -10,6 +10,5 @@
         create:
           name: coolPool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
-
       register: result
     - debug: var=result
