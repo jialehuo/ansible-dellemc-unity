@@ -3,11 +3,12 @@
   tasks:
     - name: Pool Creation and Updates
       pool:
-        login: {host: '192.168.70.217', username: 'admin', password: 'Password123!'}
+        login:
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
         create:
-          name: pool0805
-          addPoolUnitParameters: [{'poolUnit' : {"id" : "vdisk_1"}},{'poolUnit' : {"id" : "vdisk_2"}}]
-        #delete:
-          #id: pool_22
+          name: coolPool
+          addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
     - debug: var=result
