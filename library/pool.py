@@ -1,8 +1,13 @@
 #!/usr/bin/python
 
-from dellemc_unity_sdk.unity import Unity
+ANSIBLE_METADATA = {'metadata_version': '0.1',
+                    'status': ['unstable'],
+                    'supported_by': 'students'}
+
+from ansible.module_utils.basic import AnsibleModule  # unused import, but without it code doesn't work
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import validator
+from dellemc_unity_sdk.unity import Unity
 
 
 # params_types = {'create': {''}}
@@ -72,9 +77,8 @@ def modify(params, unity):
 
 
 def main():
-    runner.run([{'function': create}])
+    runner.run([{'function': create}, {'function': modify}, {'function': delete}])
 
 
-# , {'function': modify}, {'function': delete}
 if __name__ == '__main__':
     main()
