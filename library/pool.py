@@ -1,3 +1,8 @@
+#!/usr/bin/python
+ANSIBLE_METADATA = {'metadata_version': '0.1',
+                    'status': ['unstableinterface'],
+                    'supported_by': 'students'}
+from ansible.module_utils.basic import AnsibleModule
 
 from dellemc_unity_sdk.unity import Unity
 from dellemc_unity_sdk import runner

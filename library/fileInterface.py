@@ -1,13 +1,16 @@
 # TODO: import important files
-
+#!/usr/bin/python
+ANSIBLE_METADATA = {'metadata_version': '0.1',
+                    'status': ['unstableinterface'],
+                    'supported_by': 'students'}
+from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import validator
 from dellemc_unity_sdk.unity import Unity
 from dellemc_unity_sdk import runner
 
 optional_list = {
-    '','','',
-    '','','',
-    '','',''}
+    'netmask','v6PrefixLength','gateway',
+    'vlanId','isPreferred','role'}
 
 def _exception_about_parameters(supported_parameters):
     return False, 'You did not input required parameters or inputted unsupported parameter, ' \
