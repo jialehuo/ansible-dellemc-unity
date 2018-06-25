@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'status': ['unstable'],
                     'supported_by': 'students'}
