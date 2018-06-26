@@ -22,19 +22,22 @@ def create(params, unity):
     all_params = {'required': required_list,
                   'optional': optional_list}
     # TODO: how to output errors or some messages
-    nasServer = params['nasServer']
+    nasServer = params.get('nasServer')
+
+    repl = unity.query('nasServer', {'fields': 'ipAddress'})
 
     if not validator.check_parameters(params, all_params):
             return _exception_about_parameters(all_params)
     request_params = {'nasServer': nasServer}
-            for parameter in optional_list:
-            if params.get(parameter):
-                request_params.update({parameter: params.get(parameter)})
+    for parameter in optional_list:
+        if params.get(parameter):
+            request_params.update({parameter: params.get(parameter)})
     reply = unity.update('create', 'nfsServer', request_params)
-    return True, {'nfsServer': {'id': reply['entries'][0]['id']}}
+    return True, ""
+    #{'nfsServer': {'id': reply['entries'][0]['id']}}
 
 def delete(params, unity):
-    all_params = {'required':'id'}
+    all_params = {'required': {'id'}}
     if not validator.check_parameters(params, all_params):
             return _exception_about_parameters(all_params)
     if 'id' not in params:
@@ -47,11 +50,11 @@ def modify(params, unity):
     required_list = {'id'}
     optional_list.add('nfsServer') #TODO: we must not change global opt_list. figure out a workaround
 
-        all_params = {'required': required_list, 'optional': optional_list}
-        if not validator.check_parameters(params, all_params):
-            return _exception_about_parameters(all_params)
-        unity.update('modify', 'nfsServer', params)
-        return True, ''
+    all_params = {'required': required_list, 'optional': optional_list}
+    if not validator.check_parameters(params, all_params):
+        return _exception_about_parameters(all_params)
+    unity.update('modify', 'nfsServer', params)
+    return True, ''
 
 
 def main():

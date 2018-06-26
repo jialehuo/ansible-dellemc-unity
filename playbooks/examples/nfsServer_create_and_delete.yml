@@ -3,14 +3,17 @@
   tasks:
     - name: nfsServer creation and deletion
       nfsServer:
-        #login:
+        login:
           #host: "{{ host }}"
           #username: "{{ username }}"
           #password: "{{ password }}"
-        create:
-          nasServer: nasserver_2
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
+        #create:
+          #nasServer: {'id': 'nas_3'}
         delete:
-          id: nasserver_2
+          id: nfs_2
       register: result
     - debug: var=result
 

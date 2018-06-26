@@ -3,16 +3,19 @@
   tasks:
     - name: nfsServer creation and deletion
       fileInterface:
-        #login:
+        login:
           #host: "{{ host }}"
           #username: "{{ username }}"
           #password: "{{ password }}"
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
         create:
-          nasServer: nasserver_2
+          nasServer: nas_3
           ipPort: eth0
-          IpAddress: {'id': 'ipv4'}
-        delete:
-          id: fileInterface_2
+          ipAddress: {'type': 'ipv4'}
+        #delete:
+          #id: fileInterface_2
       register: result
     - debug: var=result
 
