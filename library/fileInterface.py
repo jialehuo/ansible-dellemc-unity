@@ -24,16 +24,17 @@ def create(params, unity):
                   'optional': optional_list}
     # TODO: how to output errors or some messages
     nasServer = params['nasServer'] #TODO: required_list[0]
-    ipPort = params ['ipPort']
-    ipAddress = params ['ipAddress']
+    ipPort = params['ipPort']
+    ipAddress = params['ipAddress']
     if not validator.check_parameters(params, all_params):
-            return _exception_about_parameters(all_params)
+        return _exception_about_parameters(all_params)
     request_params = {'nasServer': nasServer, 'ipPort': ipPort, 'ipAddress': ipAddress}
-            for parameter in optional_list:
-            if params.get(parameter):
-                request_params.update({parameter: params.get(parameter)})
+    for parameter in optional_list:
+        if params.get(parameter):
+            request_params.update({parameter: params.get(parameter)})
     reply = unity.update('create', 'fileInterface', request_params)
-    return True, {'fileInterface': {'id': reply['entries'][0]['id']}}
+    return True, ""
+    #{'fileInterface': {'id': reply['entries'][0]['id']}}
 
 def delete(params, unity):
     all_params = {'required':'id'}
@@ -50,11 +51,11 @@ def modify(params, unity):
     optional_list.add('nasServer') #TODO: we must not change global opt_list. figure out a workaround
     optional_list.add('ipPort')
     optional_list.add('ipAddress')
-        all_params = {'required': required_list, 'optional': optional_list}
-        if not validator.check_parameters(params, all_params):
-            return _exception_about_parameters(all_params)
-        unity.update('modify', 'fileInterface', params)
-        return True, ''
+    all_params = {'required': required_list, 'optional': optional_list}
+    if not validator.check_parameters(params, all_params):
+        return _exception_about_parameters(all_params)
+    unity.update('modify', 'fileInterface', params)
+    return True, ''
 
 
 def main():

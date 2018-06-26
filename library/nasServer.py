@@ -19,21 +19,22 @@ def _exception_about_parameters(supported_parameters):
 #a dict with req and opt params
 def create(params, unity):
     
-    required_list = {'name','hostSP','pool'}
+    required_list = {'name','homeSP','pool'}
     all_params = {'required': required_list,
                   'optional': optional_list}
     # TODO: how to output errors or some messages
     name = params['name']
-    hostSP = params['hostSP']
+    homeSP = params['homeSP']
     pool = params['pool']
     if not validator.check_parameters(params, all_params):
             return _exception_about_parameters(all_params)
-    request_params = {'name': name, 'hostSP': hostSP, 'pool': pool}
-            for parameter in optional_list:
-            if params.get(parameter):
-                request_params.update({parameter: params.get(parameter)})
+    request_params = {'name': name, 'homeSP': homeSP, 'pool': pool}
+    for parameter in optional_list:
+        if params.get(parameter):
+            request_params.update({parameter: params.get(parameter)})
     reply = unity.update('create', 'nasServer', request_params)
-    return True, {'nasServer': {'id': reply['entries'][0]['id']}}
+    return True, ""
+    #{'nasServer': {'id': reply['entries'][0]['id']}}
 
 
 
@@ -53,11 +54,11 @@ def modify(params, unity):
     optional_list.add('homeSP')
     optional_list.add('pool')
         
-        all_params = {'required': required_list, 'optional': optional_list}
-        if not validator.check_parameters(params, all_params):
-            return _exception_about_parameters(all_params)
-        unity.update('modify', 'nasServer', params)
-        return True, ''
+    all_params = {'required': required_list, 'optional': optional_list}
+    if not validator.check_parameters(params, all_params):
+        return _exception_about_parameters(all_params)
+    unity.update('modify', 'nasServer', params)
+    return True, ''
 
 
 def main():

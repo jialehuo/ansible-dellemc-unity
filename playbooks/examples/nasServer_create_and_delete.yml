@@ -3,16 +3,19 @@
   tasks:
     - name: nasServer creation and deletion
       nasServer:
-        #login:
+        login:
           #host: "{{ host }}"
           #username: "{{ username }}"
           #password: "{{ password }}"
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
         create:
           name: nasServerOnCoolPool
           homeSP: {id: 'spa'}
-          pool: {id: 'pool_8'}
-        delete:
-          id: nasserver_1
+          pool: {id: 'pool_27'}
+        #delete:
+          #id: nasserver_1
       register: result
     - debug: var=result
 
