@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  tasks:
+    - name: nfsServer creation
+      nfsServer:
+        login:
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
+        create:
+          nasServer: {'id': 'nas_3'}
+      register: result
+    - debug: var=result['special_information']['create']

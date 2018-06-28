@@ -4,11 +4,11 @@
     - name: Pool Creation and Updates
       pool:
         login:
-          host: 192.168.70.217
-          username: admin
-          password: Password123!
+          host: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         create:
-          name: coolPool
+          name: swimmingPool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
     - debug: var=result

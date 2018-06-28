@@ -1,13 +1,13 @@
 ---
 - hosts: localhost
   tasks:
-    - name: delete pool
-      pool:
-       login:
+    - name: nfsServer creation and deletion
+      fileInterface:
+        login:
           host: 192.168.70.217
           username: admin
           password: Password123!
         delete:
-          id: pool_27
+          id: fileInterface_2
       register: result
     - debug: var=result
