@@ -1,83 +1,83 @@
 #!/usr/bin/python
 
-ANSIBLE_METADATA = {'metadata_version': '0.1',
-                    'status': ['unstable'],
-                    'supported_by': 'students'}
-
-from ansible.module_utils.basic import AnsibleModule  # unused import, but without it code doesn't work
+from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import validator
+from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk.unity import Unity
+from dellemc_unity_sdk import constants
 
+ANSIBLE_METADATA = {'metadata_version': '0.1',
+                    'status': ['unstable'],
+                    'supported_by': 'community'}
 
-# params_types = {'create': {''}}
+parameters_all = {
+    'create': {
+        'VSA': {'required': {'name', 'addPoolUnitParameters'},
+                'optional': {'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold',
+                             'poolSpaceHarvestLowThreshold', 'snapSpaceHarvestHighThreshold',
+                             'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
+                             'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled',
+                             'type'}}},
+    'modify': {'VSA': {
+        'required': {'id'},
+        'optional': {'name', 'description', 'alertThreshold',
+                     'poolSpaceHarvestHighThreshold',
+                     'poolSpaceHarvestLowThreshold',
+                     'snapSpaceHarvestHighThreshold', 'snapSpaceHarvestLowThreshold',
+                     'isHarvestEnabled', 'isSnapHarvestEnabled', 'isFASTCacheEnabled',
+                     'isFASTVpScheduleEnabled', 'addPoolUnitParameters'}
+    }},
+    'delete': {'required': {'id'}}
+}
 
 
 def _get_model(unity):
-    repl = unity.query('system', {'fields': 'model'})
-    return repl['entries'][0]['model']
-
-
-def _exception_about_parameters(supported_parameters):
-    return False, 'You did not input required parameters or inputted unsupported parameter, ' \
-                  'supported parameters = ' + supported_parameters.__str__()
+    reply = unity.query('system', {'fields': 'model'})
+    return reply[0]['model']
 
 
 def create(params, unity):
-    optional_list = {'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold', 'poolSpaceHarvestLowThreshold',
-                     'snapSpaceHarvestHighThreshold', 'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
-                     'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled', 'type'
-                     }
-
+    params_types = parameters_all.get('create')
     model = _get_model(unity)
     if model == 'UnityVSA':
-        params_types = {'required': {'name', 'addPoolUnitParameters'},
-                        'optional': optional_list}
-        if not validator.check_parameters(params, params_types):
-            return _exception_about_parameters(params_types)
-        name = params['name']
-        addPoolUniParameters = params['addPoolUnitParameters']
-        request_params = {'name': name, 'addPoolUnitParameters': addPoolUniParameters}
-        for parameter in optional_list:
-            if params.get(parameter):
-                request_params.update({parameter: params.get(parameter)})
-        reply = unity.update('create', 'pool', request_params)
-        return True, ''  # {'pool': {'id': reply['entries'][0]['id']}} #TODO: remake it in framework
+        reply = runner.do_update_request(unity, params, params_types.get('VSA'), 'pool', 'create')
+        return reply
     else:
-        return False, 'this model' + model + 'unsupported yet'
-
-
-def delete(params, unity):
-    params_type = {'required': {'id'}}
-    if not validator.check_parameters(params, params_type):
-        return _exception_about_parameters(params_type)
-    if 'id' not in params:
-        return False, 'you must input id'
-    pool_id = params['id']
-    unity.update('delete', 'pool', {'id': pool_id})
-    return True, ''
+        raise TypeError("this model '" + model + "' is unsupported yet")
 
 
 def modify(params, unity):
-    required_params = {'id'}
-    optional_list = {'name', 'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold', 'poolSpaceHarvestLowThreshold',
-                     'snapSpaceHarvestHighThreshold', 'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
-                     'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled'
-                     }
     model = _get_model(unity)
+    params_types = parameters_all.get('modify')
     if model == "UnityVSA":
-        optional_list.add('addPoolUnitParameters')
-        parameters_types = {'required': required_params, 'optional': optional_list}
-        if not validator.check_parameters(params, parameters_types):
-            return _exception_about_parameters(parameters_types)
-        unity.update('modify', 'pool', params)
-        return True, ''
+        reply = runner.do_update_request(unity, params, params_types.get('VSA'), 'pool', 'modify')
+        return reply
     else:
-        return False, 'this model ' + model + ' unsupported yet'
+        raise TypeError("this model '" + model + "' is unsupported yet")
+
+
+template = {
+    constants.REST_OBJECT_KEY: 'pool',
+    constants.ACTIONS_KEY: {
+        'create':
+            {constants.EXECUTED_BY_KEY: create},
+        'modify':
+            {constants.EXECUTED_BY_KEY: modify},
+        'delete':
+            {constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
+             constants.PARAMETER_TYPES_KEY: parameters_all.get('delete')}
+    }
+}
 
 
 def main():
-    runner.run([{'function': create}, {'function': modify}, {'function': delete}])
+    arguments = runner.create_arguments_for_ansible_module([
+        {constants.ACTION_NAME: create}, {constants.ACTION_NAME: modify},
+        {constants.ACTION_NAME: 'delete'}])
+
+    ansible_module = AnsibleModule(arguments, supports_check_mode=True)
+    runner.run(ansible_module, template)
 
 
 if __name__ == '__main__':

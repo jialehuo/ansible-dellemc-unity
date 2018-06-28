@@ -3,13 +3,23 @@
   tasks:
     - name: Pool Creation
       pool:
-       login:
+        login:
           host: 192.168.70.218
           username: admin
           password: Password123!
-       create:
+        create:
           name: test_pool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
     - debug: var=result['output']['create']['id']
-
+    - name: Pool Modify
+      pool:
+        login:
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        modify:
+          id: result['output']['create']['id']
+          name: modify_name
+      register: result1
+    - debug: var=result1
