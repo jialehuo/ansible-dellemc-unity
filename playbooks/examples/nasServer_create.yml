@@ -4,9 +4,6 @@
     - name: nasServer creation and deletion
       nasServer:
         login:
-          #host: "{{ host }}"
-          #username: "{{ username }}"
-          #password: "{{ password }}"
           host: 192.168.70.217
           username: admin
           password: Password123!
@@ -14,10 +11,6 @@
           name: nasServerOnCoolPool
           homeSP: {id: 'spa'}
           pool: {id: 'pool_27'}
-        #delete:
-          #id: nasserver_1
       register: result
     - debug: var=result
 
-#ansible-playbook ../playbooks/examples/pool_create_and_delete.yml -e "host=192.168.70.217 
-#username=admin password=Password123!" -c local
