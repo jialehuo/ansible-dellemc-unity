@@ -1,10 +1,10 @@
 ---
 - hosts: localhost
   tasks:
-    - name: Pool Creation
+    - name: Create pool
       pool:
         login:
-          host: 192.168.70.218
+          host: "{{ address }}"
           username: admin
           password: Password123!
         create:
@@ -12,10 +12,10 @@
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
     - debug: var=result['output']['create']['id']
-    - name: Pool Modify
+    - name: Modify pool
       pool:
         login:
-          host: 192.168.70.218
+          host: "{{ address }}"
           username: admin
           password: Password123!
         modify:
@@ -23,3 +23,11 @@
           name: modify_name
       register: result1
     - debug: var=result1
+    - name: Delete pool
+      pool:
+        login:
+          host: "{{ address }}"
+          username: admin
+          password: Password123!
+        delete:
+          id: "{{ result['output']['create']['id'] }}"

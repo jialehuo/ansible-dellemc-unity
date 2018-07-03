@@ -8,6 +8,6 @@
           username: admin
           password: Password123!
         delete:
-          id: pool_15
+          id: "{{ delete_id }}"
       register: result
     - debug: var=result
