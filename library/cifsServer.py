@@ -18,7 +18,12 @@ parameters_all = {
 
 template = {
     constants.REST_OBJECT_KEY: 'cifsServer',
-    constants.ACTIONS_KEY: {}
+    constants.ACTIONS_KEY: {
+        'create': {
+            constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
+            constants.PARAMETER_TYPES_KEY: parameters_all.get('create')
+        }
+    }
 }
 
 
