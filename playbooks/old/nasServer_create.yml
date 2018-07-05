@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  tasks:
+    - name: create NAS server
+      dellemc_unity:
+        unity_hostname: 192.168.70.217
+        unity_username: admin
+        unity_password: Password123!
+        unity_updates:
+          - {'resource_type': 'nasServer', name: 'created by playbook', homeSP: {id: 'spa'}, pool: {id: 'pool_8'}}
+      register: result
+    - debug: var=result

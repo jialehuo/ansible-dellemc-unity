@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import constants
 
@@ -9,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'supported_by': 'community'}
 
 parameters_all = {
-    'create': {
+    'createVSA': {
         'required': {'name', 'addPoolUnitParameters'},
         'optional': {'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold',
                      'poolSpaceHarvestLowThreshold', 'snapSpaceHarvestHighThreshold',
@@ -27,32 +28,6 @@ parameters_all = {
     },
     'delete': {'required': {'id'}}
 }
-
-
-def _get_model(unity):
-    reply = unity.query('system', {'fields': 'model'})
-    return reply[0]['model']
-
-
-def create(params, unity):
-    params_types = parameters_all.get('create')
-    model = _get_model(unity)
-    if model == 'UnityVSA':
-        reply = runner.do_update_request(unity, params, params_types.get('VSA'), 'pool', 'create')
-        return reply
-    else:
-        raise TypeError("this model '" + model + "' is unsupported yet")
-
-
-def modify(params, unity):
-    model = _get_model(unity)
-    params_types = parameters_all.get('modify')
-    if model == "UnityVSA":
-        reply = runner.do_update_request(unity, params, params_types.get('VSA'), 'pool', 'modify')
-        return reply
-    else:
-        raise TypeError("this model '" + model + "' is unsupported yet")
-
 
 template = {
     constants.REST_OBJECT_KEY: 'pool',

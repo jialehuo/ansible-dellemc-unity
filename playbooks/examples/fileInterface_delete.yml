@@ -1,14 +1,13 @@
 ---
 - hosts: localhost
   tasks:
-    - name: delete pool
-      pool:
+    - name: nfsServer creation and deletion
+      fileInterface:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         delete:
-          id: "{{ delete_id }}"
-
+          id: fileInterface_2
       register: result
     - debug: var=result
