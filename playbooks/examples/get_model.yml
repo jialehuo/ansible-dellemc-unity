@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get pool id
+      system:
+       login:
+         host: "{{ address }}"
+         username: admin
+         password: Password123!
+       get:
+         fields: model
+      register: result
+    - debug: var=result
+
