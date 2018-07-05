@@ -31,7 +31,7 @@ template = {
         'create': 
         {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
             constants.PARAMETER_TYPES_KEY:parameters_all.get('create')},
-        'modifyLun': 
+        'modify': 
         {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
             constants.PARAMETER_TYPES_KEY:parameters_all.get('modify')},
         'delete': 
