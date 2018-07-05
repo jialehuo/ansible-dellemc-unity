@@ -1,3 +1,6 @@
+#how to run from terminal
+#ansible-playbook playbooks/examples/fileInterface_create_terminal_params.yml -e "host=192.168.70.217 username=admin password=Password123!" -c local
+
 ---
 - hosts: localhost
   tasks:
@@ -14,4 +17,3 @@
       register: result
     - debug: var=result
 
-#ansible-playbook playbooks/examples/pool_create_and_delete.yml -e "host=192.168.70.217 username=admin password=Password123!" -c local
