@@ -15,12 +15,13 @@ parameters_all = {
     'create': {
         'required': {'name','homeSP','pool'},
         'optional': {'tenant', 'isReplicationDestination', 'currentUnixDirectoryService', 'isMultiProtocolEnabled',
-        'allowUnmappedUser','defaultUnixUser','defaultWindowsUser','isPacketReflectEnabled'},
+                    'allowUnmappedUser','defaultUnixUser','defaultWindowsUser','isPacketReflectEnabled'},
         },
     'modify': {
         'required': {'id'},
         'optional': {'name','homeSP','pool','tenant', 'isReplicationDestination', 'currentUnixDirectoryService', 
-        'isMultiProtocolEnabled','allowUnmappedUser','defaultUnixUser','defaultWindowsUser','isPacketReflectEnabled'},
+                    'isMultiProtocolEnabled','allowUnmappedUser','defaultUnixUser','defaultWindowsUser',
+                    'isPacketReflectEnabled'},
         },
     'delete': {'required': {'id'}}
 }
@@ -52,4 +53,4 @@ def main():
 
 
 if __name__ == '__main__':
-main()
+    main()
