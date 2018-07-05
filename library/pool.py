@@ -11,13 +11,13 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
 
 parameters_all = {
     'create': {
-        'VSA': {'required': {'name', 'addPoolUnitParameters'},
-                'optional': {'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold',
-                             'poolSpaceHarvestLowThreshold', 'snapSpaceHarvestHighThreshold',
-                             'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
-                             'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled',
-                             'type'}}},
-    'modify': {'VSA': {
+        'required': {'name', 'addPoolUnitParameters'},
+        'optional': {'description', 'alertThreshold', 'poolSpaceHarvestHighThreshold',
+                     'poolSpaceHarvestLowThreshold', 'snapSpaceHarvestHighThreshold',
+                     'snapSpaceHarvestLowThreshold', 'isHarvestEnabled',
+                     'isSnapHarvestEnabled', 'isFASTCacheEnabled', 'isFASTVpScheduleEnabled',
+                     'type'}},
+    'modifyVSA': {
         'required': {'id'},
         'optional': {'name', 'description', 'alertThreshold',
                      'poolSpaceHarvestHighThreshold',
@@ -25,7 +25,7 @@ parameters_all = {
                      'snapSpaceHarvestHighThreshold', 'snapSpaceHarvestLowThreshold',
                      'isHarvestEnabled', 'isSnapHarvestEnabled', 'isFASTCacheEnabled',
                      'isFASTVpScheduleEnabled', 'addPoolUnitParameters'}
-    }},
+    },
     'delete': {'required': {'id'}}
 }
 
@@ -58,21 +58,33 @@ def modify(params, unity):
 template = {
     constants.REST_OBJECT_KEY: 'pool',
     constants.ACTIONS_KEY: {
-        'create':
-            {constants.EXECUTED_BY_KEY: create},
-        'modify':
-            {constants.EXECUTED_BY_KEY: modify},
+        'createVSA':
+            {
+                constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
+                constants.PARAMETER_TYPES_KEY: parameters_all.get('createVSA'),
+                constants.DO_ACTION: 'create'
+            },
+        'modifyVSA':
+            {
+                constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
+                constants.PARAMETER_TYPES_KEY: parameters_all.get('modifyVSA'),
+                constants.DO_ACTION: 'modify'
+            },
         'delete':
-            {constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-             constants.PARAMETER_TYPES_KEY: parameters_all.get('delete')}
+            {
+                constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
+                constants.PARAMETER_TYPES_KEY: parameters_all.get('delete')
+            }
     }
 }
 
 
 def main():
     arguments = runner.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: create}, {constants.ACTION_NAME: modify},
-        {constants.ACTION_NAME: 'delete'}])
+        {constants.ACTION_NAME: 'createVSA'},
+        {constants.ACTION_NAME: 'modifyVSA'},
+        {constants.ACTION_NAME: 'delete'}
+    ])
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)
