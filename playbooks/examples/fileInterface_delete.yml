@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  tasks:
+    - name: nfsServer creation and deletion
+      fileInterface:
+        login:
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
+        delete:
+          id: fileInterface_2
+      register: result
+    - debug: var=result

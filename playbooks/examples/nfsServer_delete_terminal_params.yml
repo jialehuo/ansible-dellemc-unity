@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  tasks:
+    - name: nfsServer creation and deletion
+      nfsServer:
+        login:
+          host: 192.168.70.217
+          username: admin
+          password: Password123!
+        delete:
+          id: '{{ id }}'
+      register: result
+    - debug: var=result

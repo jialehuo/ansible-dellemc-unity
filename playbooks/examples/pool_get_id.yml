@@ -1,0 +1,24 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get pool id
+      pool:
+       login:
+         host: "{{ address }}"
+         username: admin
+         password: Password123!
+       get:
+         fields: id
+      register: result
+    - debug: var=result['output']['get'][0]['id']
+    - name: get pool name
+      pool:
+        login:
+          host: "{{ address }}"
+          username: admin
+          password: Password123!
+        get:
+          id: "{{ result['output']['get'][0]['id'] }}"
+          fields: name
+      register: reg2
+    - debug: var=reg2['output']['get']['name']
