@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  tasks:
+    - name: lun create
+      lun:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        createLun:
+          name: lunByPlaybook
+          lunParameters: {pool: {id: 'pool_27'}, "size": 1073741824}
+      register: result
+    - debug: var=result

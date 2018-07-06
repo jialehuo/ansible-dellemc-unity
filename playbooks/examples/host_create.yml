@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  tasks:
+    - name: host create
+      host:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        create:
+          type: 1
+          name: "hostByPlaybook"
+      register: result
+    - debug: var=result

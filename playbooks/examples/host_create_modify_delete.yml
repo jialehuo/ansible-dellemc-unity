@@ -1,0 +1,43 @@
+---
+- hosts: localhost
+  tasks:
+    - name: host create
+      host:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        create:
+          type: 1
+          name: "hostByPlaybook"
+      register: result
+    - debug: var=result
+    - name: host modify
+      host:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        modify:
+          id: "{{ result['output']['create']['id'] }}"
+          name: "host_with_modifed_name"
+    - debug: var=result
+    - name: host delete
+      host:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        delete:
+          id: "{{ result['output']['create']['id'] }}"
+      register: result
+    - debug: var=result

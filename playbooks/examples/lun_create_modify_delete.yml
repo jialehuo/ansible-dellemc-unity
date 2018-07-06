@@ -1,0 +1,43 @@
+---
+- hosts: localhost
+  tasks:
+    - name: lun create
+      lun:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        createLun:
+          name: lunByPlaybook
+          lunParameters: {pool: {id: 'pool_27'}, "size": 1073741824}
+      register: result
+    - debug: var=result
+    - name: lun modify
+      lun:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        modifyLun:
+          id: "{{ result['output']['createLun']['storageResource']['id'] }}"
+          name: modified_name_by_playbook
+    - debug: var=result
+    - name: lun delete
+      lun:
+        login:
+          #host: "{{ host }}"
+          #username: "{{ username }}"
+          #password: "{{ password }}"
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        delete:
+          id: "{{ result['output']['createLun']['storageResource']['id'] }}"
+      register: result
+    - debug: var=result
