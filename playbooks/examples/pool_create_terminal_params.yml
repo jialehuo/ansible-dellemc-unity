@@ -7,7 +7,7 @@
           host: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
-        create:
+        createVSA:
           name: swimmingPool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result

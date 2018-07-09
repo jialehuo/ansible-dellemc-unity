@@ -11,7 +11,7 @@
           name: test_pool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
-    - debug: var=result['output']['create']['id']
+    - debug: var=result['output']['createVSA']['id']
     - name: Modify pool
       pool:
         login:
@@ -19,7 +19,7 @@
           username: admin
           password: Password123!
         modifyVSA:
-          id: "{{ result['output']['create']['id'] }}"
+          id: "{{ result['output']['createVSA']['id'] }}"
           name: modify_name
       register: result1
     - debug: var=result1
@@ -30,4 +30,4 @@
           username: admin
           password: Password123!
         delete:
-          id: "{{ result['output']['create']['id'] }}"
+          id: "{{ result['output']['createVSA']['id'] }}"

@@ -12,5 +12,5 @@
 
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result
-    - debug: var=result['output']['create']['id']
+    - debug: var=result['output']['createVSA']['id']
 
