@@ -1,0 +1,39 @@
+---
+- hosts: localhost
+  vars_files:
+    - ../../group_vars/all
+  tasks:
+    - name: Create host
+      host:
+        login:
+          host: "{{ unity_host }}"
+          username: "{{ unity_username }}"
+          password: "{{ unity_password }}"
+        create:
+          type: "{{ host_type }}"
+          name: "{{ host_name }}"
+      register: result1
+    - debug: var=result1
+
+    - name: Modify host
+      host:
+        login:
+          host: "{{ unity_host }}"
+          username: "{{ unity_username }}"
+          password: "{{ unity_password }}"
+        modify:
+          id: "{{ result1['output']['create']['id'] }}"
+          name: "host_with_modifed_name"
+      register: result2
+    - debug: var=result2
+
+    - name: Delete host
+      host:
+        login:
+          host: "{{ unity_host }}"
+          username: "{{ unity_username }}"
+          password: "{{ unity_password }}"
+        delete:
+          id: "{{ result1['output']['create']['id'] }}"
+      register: result3
+    - debug: var=result3

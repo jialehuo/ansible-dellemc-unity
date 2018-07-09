@@ -1,22 +1,66 @@
----
+# Ansible host address
+#executing_host: localhost
 
 # Unity host address
-host1: 192.168.70.217
+unity_host: 192.168.70.218
 
 # Unity admin username
-username: admin
+unity_username: admin
 
 # Unity admin default password
-old_password: Password123#
+default_password: Password123#
 
 # Unity admin password
-password: Password123!
+unity_password: Password123!
 
 # Path to Unity license filea
 license_path: /home/labadmin/unity.lic
 
+# Pool name
+pool_name: mityushin_pool
+
+# Pool id
+pool_id: pool_39
+
 # DNS Servers
-dns_servers: "192.168.0.10"
+dns_servers: 192.168.0.10
 
 # NTP Servers separated by space
-ntp_servers: "0.us.pool.ntp.org"
+ntp_servers: 0.us.pool.ntp.org
+
+# Lun name
+lun_name: mityushin_lun
+
+# Lun size
+lun_size: 1073741824
+
+# Host name
+host_name: mityushin_host
+
+# Host type
+host_type: 1
+
+host_id: Host_46
+
+# Ethernet port id
+ethernet_port_id: spa_eth1
+
+iscsiPortal_ipAddress: 192.168.70.225
+
+iscsiPortal_netmask: 255.255.255.0
+
+iscsiPortal_id: if_61
+
+nasServer_name: nasServerOnCoolPool
+
+homeSP_id: spa
+
+nasServer_id: nas_4
+
+nfsServer_id: nfs_23
+
+fileInterface_ipPort: spa_eth0
+
+fileInterface_ipAddress: 192.168.70.222
+
+fileInterface_id: if_53

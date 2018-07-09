@@ -3,13 +3,13 @@
   vars_files:
     - ../../group_vars/all
   tasks:
-    - name: get pool id
-      pool:
+    - name: Create nfsServer
+      nfsServer:
         login:
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        get:
-         fields: id, name
+        create:
+          nasServer: {'id': "{{ nasServer_id }}"}
       register: result1
-    - debug: var=result1['output']['get']
+    - debug: var=result1['output']

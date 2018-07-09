@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import AnsibleModule
-
+from ansible.module_utils.basic import *
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import constants
 
