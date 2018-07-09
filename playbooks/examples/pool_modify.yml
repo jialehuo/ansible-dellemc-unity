@@ -7,7 +7,7 @@
           host: "{{ address }}"
           username: admin
           password: Password123!
-        modify:
+        modifyVSA:
           id: pool_27
           name: modify_name
       register: result1

@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: create cifsServer
+      cifsServer:
+       login:
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+       create:
+          nasServer: {"id":"nas_3"}
+          name: test_cffs_server
+      register: result
+    - debug: var=result['output']['create']['id']
