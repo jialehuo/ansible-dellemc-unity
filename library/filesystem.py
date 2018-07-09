@@ -9,7 +9,7 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'status': ['unstable'],
                     'supported_by': 'community'}
 parameters_all = {
-    'createFilesystem': {
+    'create': {
         'name': dict(required=True, type='str'),
         'fsParameters': dict(required=True),
         'description': dict(type='str'),
@@ -24,9 +24,10 @@ parameters_all = {
 template = {
     constants.REST_OBJECT_KEY: 'storageResource',
     constants.ACTIONS_KEY: {
-        'createFilesystem': {
+        'create': {
             constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-            constants.PARAMETER_TYPES_KEY: parameters_all.get('createFilesystem')
+            constants.PARAMETER_TYPES_KEY: parameters_all.get('create'),
+            constants.DO_ACTION: 'createFilesystem'
         }
     }
 }
