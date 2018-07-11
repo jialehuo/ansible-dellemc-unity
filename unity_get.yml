@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get lun
+      unity_get:
+        login:
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        get:
+          resource_type: lun
+          fields: {name}
+      register: result
+    - debug: var=result
