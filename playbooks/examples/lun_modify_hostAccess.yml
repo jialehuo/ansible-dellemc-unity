@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: lun modify
+      lun:
+        login:
+          host: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        modifyLun:
+          id: "sv_21"
+          : {host: {id: "Host_36"}, "accessMask": 3}
+    - debug: var=result
+
