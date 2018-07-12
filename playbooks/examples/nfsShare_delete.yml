@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  tasks:
+    - name: filesystem creation
+      allPurposeGetter:
+        login:
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        get:
+          resource_type: nfsShare
+          fields: id
+      register: result
+    - debug: var=result['output']['get'][0]['id']
+    - name: nfsShare creation
+      nfsShare:
+        login:
+          host: 192.168.70.218
+          username: admin
+          password: Password123!
+        delete:
+          storageResourceId: res_4
+          id: "{{ result['output']['get'][0]['id'] }}"
+      register: result1
+    - debug: var=result1
+ 
+
