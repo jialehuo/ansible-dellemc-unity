@@ -8,6 +8,6 @@
           username: admin
           password: Password123!
         delete:
-          id: fileInterface_2
+          id: if_43
       register: result
     - debug: var=result

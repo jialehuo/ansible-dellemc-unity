@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  tasks:
+    - name: create file system
+      filesystem:
+        login:
+          host: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        create:
+          name: file_system_created_by_playbook
+          fsParameters:
+            pool:  {id: pool_42}
+            nasServer: {id: nas_17}
+            size: 5368709120 # size 5 GB
+            supportedProtocols: 0
+      register: file_system_create_results
+    - debug: var=file_system_create_results

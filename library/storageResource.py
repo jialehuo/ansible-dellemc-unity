@@ -17,8 +17,8 @@ parameters_all = {
 }
 
 template = {
-    constants.REST_OBJECT_KEY: 'storageResource',
-    constants.ACTIONS_KEY: {}
+    constants.REST_OBJECT: 'storageResource',
+    constants.ACTIONS: {}
 }
 
 
