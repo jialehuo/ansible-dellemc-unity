@@ -38,10 +38,11 @@ def create(params, unity):
         if params.get(parameter):
             optional_params.update({parameter: params.get(parameter)}) 
     if optional_params:
-        request_params.update({'nfsShareParameters': optional_params});
+        request_params.update({'nfsShareParameters': optional_params})
 
     request_params_wrapper = {'id': storageId,'nfsShareCreate': [request_params]}
-    return unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
+    unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
+    return unity.query('nfsShare', {'fields': 'id'})
 
 def delete(params,unity):
     storageId = params.get('storageResourceId')

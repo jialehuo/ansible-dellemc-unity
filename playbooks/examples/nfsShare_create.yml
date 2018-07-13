@@ -2,28 +2,28 @@
 - hosts: localhost
   tasks:
     - name: get id
-      filesystem:
+      commonGetPost:
         login:
           host: 192.168.70.217
           username: admin
           password: Password123!
         get:
-          id: fs_3
+          resource_type: filesystem
           fields: storageResource
       register: result
-    - debug: var=result['output']['get']['storageResource']['id']
-    #['output']['get'][0]['id']
+    - debug: var=result['output']['get'][0]['storageResource']['id']
+
     - name: nfsShare creation
       nfsShare:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         create:
-          storageResourceId: {'id': "{{ result['output']['get']['storageResource']['id'] }}"}
+          storageResourceId: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: result1
-    - debug: var=result1
+    - debug: var=result1['output']
  
 

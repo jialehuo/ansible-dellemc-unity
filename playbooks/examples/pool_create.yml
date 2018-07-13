@@ -10,6 +10,7 @@
        createVSA:
           name: test_pool
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
+          aphonin: alex
       register: result
     - debug: var=result['output']['createVSA']['id']
 

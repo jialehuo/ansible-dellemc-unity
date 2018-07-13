@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - name: create Nas Server
+    - name: Create nasServer
       nasServer:
          login:
            host: "{{ host }}"

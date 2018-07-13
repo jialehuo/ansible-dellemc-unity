@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nfsServer creation and deletion
+    - name: fileInterface creation
       fileInterface:
         login:
           host: 192.168.70.217
