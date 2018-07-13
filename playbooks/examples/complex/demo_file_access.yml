@@ -57,7 +57,7 @@
         create:
           nasServer: {id: "{{ create_nas_server_results['output']['create']['id'] }}"}
           ipPort: {id: "spa_eth0"}
-          ipAddress: 192.168.70.226
+          ipAddress: "{{ fileInterface_ip }}"
       register: file_interface_create_results
     - debug: var=file_interface_create_results
 
@@ -76,3 +76,28 @@
             supportedProtocols: 0
       register: file_system_create_results
     - debug: var=file_system_create_results
+
+    - name: get storageResource id from file system
+      filesystem:
+        login:
+          host: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        get:
+          id: "{{ file_system_create_results['output']['create']['id'] }}"
+          fields: storageResource
+      register: result
+    - debug: var=result['output']
+
+    - name: create nfsShare
+      nfsShare:
+        login:
+          host: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        create:
+          storageResourceId: {'id': "{{ result['output']['get']['storageResource']['id'] }}"}
+          name: nfsShareTestPlaybook
+          path: '/'
+      register: result1
+    - debug: var=result1

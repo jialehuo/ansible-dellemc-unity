@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get disks
+      virtualDisk:
+       login:
+         host: 192.168.70.218
+         username: admin
+         password: Password123!
+       get:
+         fields: id
+      register: result
+    - debug: var=result
+
