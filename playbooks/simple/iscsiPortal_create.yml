@@ -3,14 +3,15 @@
   vars_files:
     - ../../group_vars/all
   tasks:
-    - name: get model
-      system:
+    - name: Create iscsiPortal
+      iscsiPortal:
         login:
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        get:
-          fields: model
+        create:
+          ethernetPort: {"id": "{{ ethernet_port_id }}"}
+          ipAddress: "{{ iscsiPortal_ipAddress }}"
+          netmask: "{{ iscsiPortal_netmask }}"
       register: result1
     - debug: var=result1['output']
-
