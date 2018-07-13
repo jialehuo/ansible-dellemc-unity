@@ -17,8 +17,8 @@ parameters_all = {
 }
 
 template = {
-    constants.REST_OBJECT_KEY: 'cifsServer',
-    constants.ACTIONS_KEY: {
+    constants.REST_OBJECT: 'cifsServer',
+    constants.ACTIONS: {
         'create': {
             constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
             constants.PARAMETER_TYPES_KEY: parameters_all.get('create')
@@ -28,9 +28,7 @@ template = {
 
 
 def main():
-    arguments = supportive_functions.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: 'create'}
-    ])
+    arguments = supportive_functions.create_arguments_for_ansible_module(template)
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)
 

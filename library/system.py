@@ -9,8 +9,8 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'supported_by': 'community'}
 
 template = {
-    constants.REST_OBJECT_KEY: 'system',
-    constants.ACTIONS_KEY: {}
+    constants.REST_OBJECT: 'system',
+    constants.ACTIONS: {}
 }
 
 

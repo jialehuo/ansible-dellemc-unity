@@ -1,16 +1,17 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nasServer creation and deletion
+    - name: create Nas Server
       nasServer:
-        login:
-          host: 192.168.70.217
-          username: admin
-          password: Password123!
-        create:
-          name: nasServerOnCoolPool
-          homeSP: {id: 'spa'}
-          pool: {id: 'pool_27'}
-      register: result
-    - debug: var=result
+         login:
+           host: "{{ host }}"
+           username: "{{ username }}"
+           password: "{{ password }}"
+         create:
+           name: nasServerFromPlaybook
+           homeSP: {id: 'spa'}
+           pool:  {id: "pool_41"}
+           isMultiProtocolEnabled: false
+      register: create_nas_server_results
+    - debug: var=create_nas_server_results
 

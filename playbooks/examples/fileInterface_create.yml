@@ -8,8 +8,8 @@
           username: admin
           password: Password123!
         create:
-          nasServer: nas_3
-          ipPort: eth0
-          ipAddress: {'type': 'ipv4'}
+          nasServer: {id: "nas_7"}
+          ipPort: {id: "spa_eth0"}
+          ipAddress: 192.168.70.226
       register: result
     - debug: var=result

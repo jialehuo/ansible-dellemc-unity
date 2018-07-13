@@ -29,9 +29,10 @@ parameters_all = {
     'delete': {'required': {'id'}}
 }
 
+
 template = {
-    constants.REST_OBJECT_KEY: 'pool',
-    constants.ACTIONS_KEY: {
+    constants.REST_OBJECT: 'pool',
+    constants.ACTIONS: {
         'createVSA':
             {
                 constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
@@ -54,11 +55,7 @@ template = {
 
 
 def main():
-    arguments = runner.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: 'createVSA'},
-        {constants.ACTION_NAME: 'modifyVSA'},
-        {constants.ACTION_NAME: 'delete'}
-    ])
+    arguments = runner.create_arguments_for_ansible_module(template)
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)
