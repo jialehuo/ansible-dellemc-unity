@@ -26,8 +26,8 @@ parameters_all = {
 }
 
 template = {
-    constants.REST_OBJECT_KEY: 'nfsServer',
-    constants.ACTIONS_KEY: {
+    constants.REST_OBJECT: 'nfsServer',
+    constants.ACTIONS: {
         'create': 
         {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
             constants.PARAMETER_TYPES_KEY:parameters_all.get('create')},
@@ -42,10 +42,7 @@ template = {
 
 
 def main():
-    arguments = runner.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: 'create'},
-        {constants.ACTION_NAME: 'modify'},
-        {constants.ACTION_NAME: 'delete'}])
+    arguments = runner.create_arguments_for_ansible_module(template)
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)

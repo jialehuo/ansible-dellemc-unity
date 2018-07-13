@@ -1,8 +1,8 @@
 ---
 - hosts: localhost
   tasks:
-    - name: storageResource id
-      allPurposeGetter:
+    - name: get id
+      commonGetPost:
         login:
           host: 192.168.70.217
           username: admin
@@ -12,6 +12,7 @@
           fields: storageResource
       register: result
     - debug: var=result['output']['get'][0]['storageResource']['id']
+
     - name: nfsShare creation
       nfsShare:
         login:

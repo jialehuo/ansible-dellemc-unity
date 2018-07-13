@@ -1,13 +1,14 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nfsServer creation and deletion
-      fileInterface:
+    - name: initiator modify
+      initiator:
         login:
           host: 192.168.70.217
           username: admin
           password: Password123!
-        delete:
-          id: if_43
+        modify:
+          id: "HostInitiator_3"
+          host: {id: "Host_17"}
       register: result
     - debug: var=result

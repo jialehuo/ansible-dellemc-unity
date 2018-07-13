@@ -4,7 +4,7 @@
     - name: get nfsServer
       nfsServer:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         get:
@@ -14,7 +14,7 @@
     - name: nfsServer deletion
       nfsServer:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         delete:
