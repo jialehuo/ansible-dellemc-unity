@@ -1,28 +1,28 @@
 ---
 - hosts: localhost
   tasks:
-    - name: filesystem creation
-      storageResource:
+    - name: storageResource id
+      allPurposeGetter:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         get:
-          fields: id
+          resource_type: filesystem
+          fields: storageResource
       register: result
-    - debug: var=result
-    #['output']['get'][0]['id']
+    - debug: var=result['output']['get'][0]['storageResource']['id']
     - name: nfsShare creation
       nfsShare:
         login:
-          host: 192.168.70.218
+          host: 192.168.70.217
           username: admin
           password: Password123!
         create:
-          storageResourceId: {'id': 'res_4'}
+          storageResourceId: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: result1
-    - debug: var=result1
+    - debug: var=result1['output']
  
 

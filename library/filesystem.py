@@ -35,7 +35,7 @@ template = {
 
 def main():
     arguments = supportive_functions.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: 'createFilesystem'}
+        {constants.ACTION_NAME: 'create'}
     ])
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)

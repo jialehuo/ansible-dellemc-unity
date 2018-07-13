@@ -4,10 +4,10 @@
     - name: nfsServer creation
       nfsServer:
         login:
-          host: '{{ host }}'
-          username: '{{ username }}'
-          password: '{{ password }}'
+          host: "{{ host2 }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         create:
-          nasServer: {'id': 'nas_3'}
+          nasServer: {'id': 'nas_4'}
       register: result
     - debug: var=result['special_information']['create']

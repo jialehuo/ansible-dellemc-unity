@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nfsServer creation and deletion
+    - name: fileInterface creation
       fileInterface:
         login:
           host: 192.168.70.217
@@ -10,6 +10,6 @@
         create:
           nasServer: nas_3
           ipPort: eth0
-          ipAddress: {'type': 'ipv4'}
+          ipAddress: 192.168.70.222
       register: result
     - debug: var=result

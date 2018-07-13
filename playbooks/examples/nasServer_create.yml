@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   tasks:
-    - name: nasServer creation and deletion
+    - name: nasServer creation
       nasServer:
         login:
           host: 192.168.70.217
