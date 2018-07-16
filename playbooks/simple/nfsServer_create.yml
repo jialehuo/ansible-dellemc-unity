@@ -3,6 +3,17 @@
   vars_files:
     - ../../group_vars/all
   tasks:
+    - name: Get nasServer id
+      nasServer:
+        login:
+          host: "{{ unity_host }}"
+          username: "{{ unity_username }}"
+          password: "{{ unity_password }}"
+        get:
+          fields: id
+      register: result1
+    - debug: var=result1['output']['get'][0]['id']
+
     - name: Create nfsServer
       nfsServer:
         login:
@@ -10,6 +21,6 @@
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         create:
-          nasServer: {'id': "{{ nasServer_id }}"}
-      register: result1
-    - debug: var=result1['output']
+          nasServer: {'id': "{{ result1['output']['get'][0]['id'] }}"}
+      register: result2
+    - debug: var=result2['output']

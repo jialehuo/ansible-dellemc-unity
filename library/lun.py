@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import *
+from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
+from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk import constants
 
 ANSIBLE_METADATA = {'metadata_version': '0.1',
@@ -34,9 +35,7 @@ template = {
 
 
 def main():
-    arguments = runner.create_arguments_for_ansible_module([
-        {constants.ACTION_NAME: 'createLun'},{constants.ACTION_NAME: 'modifyLun'},
-        {constants.ACTION_NAME: 'delete'}])
+    arguments = supportive_functions.create_arguments_for_ansible_module(template)
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)

@@ -1,3 +1,7 @@
+#TODO:
+* расписать про два типа геттеров: универсальный и 
+через конкретный модуль
+
 ## EMC Unity Configuration and Management
 
 - Requires Ansible 2.2 or newer
@@ -25,6 +29,9 @@ This package of Ansible modules provides access to configure and manage EMC Unit
 
 
  передача параметров от одного к другому
+* how to run from terminal TODO:::::::::::::::::::::::::::::::::::::!!!!!!!!!
+* `#ansible-playbook playbooks/examples/fileInterface_create_terminal_params.yml -e "host=192.168.70.217 username=admin password=Password123!" -c local`
+
 * folder `playbooks/simple` contains simple actions
 * folder `playbooks/tests` demonstrates all possible actions for the REST object
 * folder `playbooks/examples` shows creating interconnected objects in a chain

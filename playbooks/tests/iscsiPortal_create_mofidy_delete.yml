@@ -23,7 +23,7 @@
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         modify:
-          id: "{{ result['output']['create']['id'] }}"
+          id: "{{ result1['output']['create']['id'] }}"
           ipAddress: "{{ iscsiPortal_ipAddress }}"
       register: result2
     - debug: var=result2

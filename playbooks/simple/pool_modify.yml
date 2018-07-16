@@ -9,7 +9,7 @@
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        modify:
+        modifyVSA:
           id: "{{ pool_id }}"
           name: "modifyNameByPlaybook"
 

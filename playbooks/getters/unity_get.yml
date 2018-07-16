@@ -3,14 +3,14 @@
   vars_files:
     - ../../group_vars/all
   tasks:
-    - name: get model
-      system:
+    - name: Get lun
+      commonGetPost:
         login:
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         get:
-          fields: model
+          resource_type: lun
+          fields: {name}
       register: result1
-    - debug: var=result1['output']
-
+    - debug: var=result1

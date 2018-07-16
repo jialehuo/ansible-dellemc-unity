@@ -9,7 +9,7 @@
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        create:
+        createVSA:
           name: "{{ pool_name }}"
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
 

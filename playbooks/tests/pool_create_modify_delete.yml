@@ -9,7 +9,7 @@
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        create:
+        createVSA:
           name: "{{ pool_name }}"
           addPoolUnitParameters: [{"poolUnit" : {"id" : "vdisk_1"}}, {"poolUnit" : {"id" : "vdisk_2"}}]
       register: result1
@@ -21,9 +21,9 @@
           host: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
-        modify:
+        modifyVSA:
           id: "{{ result1['output']['create']['id'] }}"
-          name: "{{ pool_name }}"
+          name: "modifyNameByPlaybook"
       register: result2
     - debug: var=result2['output']
 

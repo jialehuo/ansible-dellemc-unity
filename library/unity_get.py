@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-
 from dellemc_unity_sdk import runner
+from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk import constants
-from dellemc_unity_sdk import validator
-from dellemc_unity_sdk.unity import Unity
 
 ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'status': ['unstable'],
@@ -28,7 +26,8 @@ template = {
 
 
 def main():
-    arguments = runner.create_arguments_for_ansible_module([{constants.ACTION_NAME: 'get'}])
+    arguments = supportive_functions.create_arguments_for_ansible_module(template)
+
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     template[constants.REST_OBJECT_KEY] = ansible_module.params['get'].get('resource_type')
     runner.run(ansible_module, template)

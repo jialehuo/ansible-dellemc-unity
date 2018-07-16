@@ -8,21 +8,27 @@ from dellemc_unity_sdk import constants
 ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'status': ['unstable'],
                     'supported_by': 'community'}
-
 parameters_all = {
     'create': {
-        'nasServer': dict(required=True, type='dict'),
-        'name': dict(type='str'),
-        'description': dict(type='str')
+        'name': dict(required=True, type='str'),
+        'fsParameters': dict(required=True),
+        'description': dict(type='str'),
+        'replicationParameters': dict(type='dict'),
+        'snapScheduleParameters': dict(type='dict'),
+        'cifsFsParameters': dict(type='dict'),
+        'nfsShareCreate': dict(type='array'),
+        'cifsShareCreate': dict(type='array')
     }
 }
 
 template = {
-    constants.REST_OBJECT: 'cifsServer',
+    constants.REST_OBJECT: 'storageResource',
+    constants.REST_OBJECT_FOR_GET_REQUEST: "filesystem",
     constants.ACTIONS: {
         'create': {
             constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-            constants.PARAMETER_TYPES_KEY: parameters_all.get('create')
+            constants.PARAMETER_TYPES_KEY: parameters_all.get('create'),
+            constants.DO_ACTION: 'createFilesystem'
         }
     }
 }

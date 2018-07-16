@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import *
+from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
+from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk import constants
 
 ANSIBLE_METADATA = {'metadata_version': '0.1',
@@ -9,13 +10,14 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'supported_by': 'community'}
 
 template = {
-    constants.REST_OBJECT_KEY: 'system',
-    constants.ACTIONS_KEY: {}
+    constants.REST_OBJECT: 'system',
+    constants.ACTIONS: {}
 }
 
 
 def main():
-    arguments = runner.create_arguments_for_ansible_module([])
+    arguments = supportive_functions.create_arguments_for_ansible_module(template)
+
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)
 
