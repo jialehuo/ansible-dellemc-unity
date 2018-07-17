@@ -4,7 +4,7 @@
     - name: get lun
       unity_get:
         login:
-          host: 192.168.70.218
+          unityIP: 192.168.70.218
           username: admin
           password: Password123!
         get:

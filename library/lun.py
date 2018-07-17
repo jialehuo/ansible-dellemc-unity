@@ -22,14 +22,14 @@ parameters_all = {
 }
 
 template = {
-    constants.REST_OBJECT_KEY: 'storageResource',
-    constants.ACTIONS_KEY: {
-        'createLun': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('create')},
-        'modifyLun': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('modify')},
-        'delete': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('delete')}
+    constants.REST_OBJECT: 'storageResource',
+    constants.ACTIONS: {
+        'createLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('create')},
+        'modifyLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('modify')},
+        'delete': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('delete')}
     }
 }
 

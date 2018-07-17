@@ -6,7 +6,7 @@
     - name: Create nasServer
       nasServer:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         create:
@@ -19,7 +19,7 @@
     - name: Modify nasServer
       nasServer:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         modify:
@@ -31,7 +31,7 @@
     - name: Delete nasServer
       nasServer:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         delete:

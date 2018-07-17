@@ -6,7 +6,7 @@
     - name: Create lun
       lun:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         createLun:
@@ -18,7 +18,7 @@
     - name: Modify lun
       lun:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         modifyLun:
@@ -30,7 +30,7 @@
     - name: Delete lun
       lun:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         delete:

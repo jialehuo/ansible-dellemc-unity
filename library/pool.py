@@ -35,8 +35,8 @@ template = {
     constants.ACTIONS: {
         'createVSA':
             {
-                constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-                constants.PARAMETER_TYPES_KEY: parameters_all.get('createVSA'),
+                constants.ACTION_TYPE: constants.ActionType.UPDATE,
+                constants.PARAMETER_TYPES: parameters_all.get('createVSA'),
                 constants.DO_ACTION: 'create'
             },
         'modifyVSA':

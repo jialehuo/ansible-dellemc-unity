@@ -6,7 +6,7 @@
     - name: Get nfsServer
       nfsServer:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         get:
@@ -17,7 +17,7 @@
     - name: Delete nfsServer
       nfsServer:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         delete:

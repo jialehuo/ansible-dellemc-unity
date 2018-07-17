@@ -22,14 +22,14 @@ parameters_all = {
 }
 
 template = {
-    constants.REST_OBJECT_KEY: 'host',
-    constants.ACTIONS_KEY: {
-        'create': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('create')},
-        'modify': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('modify')},
-        'delete': {constants.ACTION_TYPE_KEY:constants.ActionType.UPDATE, 
-        constants.PARAMETER_TYPES_KEY:parameters_all.get('delete')}
+    constants.REST_OBJECT: 'host',
+    constants.ACTIONS: {
+        'create': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('create')},
+        'modify': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('modify')},
+        'delete': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        constants.PARAMETER_TYPES:parameters_all.get('delete')}
     }
 }
 
