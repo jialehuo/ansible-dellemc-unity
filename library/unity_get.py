@@ -17,10 +17,10 @@ parameters_all = {
 }
 
 template = {
-    constants.ACTIONS_KEY: {
+    constants.ACTIONS: {
         'get':
-            {constants.EXECUTED_BY_SDK: 'get', constants.ACTION_TYPE_KEY: constants.ActionType.QUERY,
-             constants.PARAMETER_TYPES_KEY:parameters_all.get('get')}
+            {constants.EXECUTED_BY_SDK: 'get', constants.ACTION_TYPE: constants.ActionType.QUERY,
+             constants.PARAMETER_TYPES:parameters_all.get('get')}
     }
 }
 
@@ -29,7 +29,7 @@ def main():
     arguments = supportive_functions.create_arguments_for_ansible_module(template)
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
-    template[constants.REST_OBJECT_KEY] = ansible_module.params['get'].get('resource_type')
+    template[constants.REST_OBJECT] = ansible_module.params['get'].get('resource_type')
     runner.run(ansible_module, template)
 
 

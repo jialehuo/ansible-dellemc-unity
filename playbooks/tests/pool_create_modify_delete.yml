@@ -6,7 +6,7 @@
     - name: Create pool
       pool:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         createVSA:
@@ -18,7 +18,7 @@
     - name: Modify pool
       pool:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         modifyVSA:
@@ -30,7 +30,7 @@
     - name: Delete pool
       pool:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         delete:

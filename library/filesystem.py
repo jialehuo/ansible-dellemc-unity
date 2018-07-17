@@ -26,8 +26,8 @@ template = {
     constants.REST_OBJECT_FOR_GET_REQUEST: "filesystem",
     constants.ACTIONS: {
         'create': {
-            constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-            constants.PARAMETER_TYPES_KEY: parameters_all.get('create'),
+            constants.ACTION_TYPE: constants.ActionType.UPDATE,
+            constants.PARAMETER_TYPES: parameters_all.get('create'),
             constants.DO_ACTION: 'createFilesystem'
         }
     }

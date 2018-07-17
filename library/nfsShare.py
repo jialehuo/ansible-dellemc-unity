@@ -50,12 +50,12 @@ def delete(params,unity):
     return unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
 
 template = {
-    constants.REST_OBJECT_KEY: 'storageResource',
-    constants.ACTIONS_KEY: {
+    constants.REST_OBJECT: 'storageResource',
+    constants.ACTIONS: {
         'create': 
-        {constants.EXECUTED_BY_KEY: create},
+        {constants.EXECUTED_BY: create},
         'delete': 
-        {constants.EXECUTED_BY_KEY: delete}
+        {constants.EXECUTED_BY: delete}
     }
 }
 
