@@ -87,7 +87,7 @@
           username: "{{ username }}"
           password: "{{ password }}"
         create:
-          storageResourceId: {'id': "{{ file_system_create_results['output']['create']['storageResource']['id'] }}"}
+          storageResource: {'id': "{{ file_system_create_results['output']['create']['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: create_nfs_share_results

@@ -4,6 +4,7 @@ from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
 from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk import constants
+from dellemc_unity_sdk import validator
 
 ANSIBLE_METADATA = {'metadata_version': '0.1',
                     'status': ['unstable'],
@@ -11,21 +12,23 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
 #'fsId',
 parameters_all = {
     'create': {
-        'required': {'name','path'},
+        'required': {'storageResource','name','path'},
         'optional': {'description','isReadOnly','defaultAccess','minSecurity','noAccessHosts',
                     'readOnlyHosts','readWriteHosts','rootAccessHosts'}
         },
     'modify': {
-        'required': {'id'},
-        'optional': {'name','snap','path','description','isReadOnly','defaultAccess','minSecurity',
+        'required': {'storageResource','nfsShare'},
+        'optional': {'snap','path','description','isReadOnly','defaultAccess','minSecurity',
                     'noAccessHosts','readOnlyHosts','readWriteHosts','rootAccessHosts'},
         },
-    'delete': {'required': {'id'}}
+    'delete': {
+    	'required': {'storageResource','nfsShare'}
+    	}
 }
 
 
 def create(params, unity):   
-    storageId = params.get('storageResourceId').get('id')
+    storageId = params.get('storageResource').get('id')
     name = params.get('name')
     path = params.get('path')
     #if not validator.check_parameters(params, parameters_all.get('create')):
@@ -42,25 +45,47 @@ def create(params, unity):
     unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
     return unity.query('nfsShare', {'fields': 'id'})
 
+def modify(params, unity):   
+    storageId = params.get('storageResource').get('id')
+    nfsShareId = params.get('nfsShare').get('id')
+    #if not validator.check_parameters(params, parameters_all.get('modify')):
+        #supportive_functions.raise_exception_about_results(parameters_all.get('modify'))
+    request_params = {'nfsShare': {'id': nfsShareId}}
+    optional_params=dict()
+    for parameter in parameters_all.get('modify').get('optional'):
+        if params.get(parameter):
+            optional_params.update({parameter: params.get(parameter)}) 
+    if optional_params:
+        request_params.update({'nfsShareParameters': optional_params})
+
+    request_params_wrapper = {'id': storageId,'nfsShareModify': [request_params]}
+    return unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
+
+
+
 def delete(params,unity):
-    storageId = params.get('storageResourceId')
-    nfsShareId = params.get('id')
+    storageId = params.get('storageResource').get('id')
+    nfsShareId = params.get('nfsShare').get('id')
     request_params = [{'nfsShare': {'id': nfsShareId}}]
     request_params_wrapper = {'id': storageId,'nfsShareDelete':request_params}
     return unity.update('modifyFilesystem', 'storageResource', request_params_wrapper)
+
 
 template = {
     constants.REST_OBJECT_KEY: 'storageResource',
     constants.ACTIONS_KEY: {
         'create': 
         {constants.EXECUTED_BY_KEY: create},
+        'modify': 
+        {constants.EXECUTED_BY_KEY: modify},
         'delete': 
         {constants.EXECUTED_BY_KEY: delete}
     }
 }
 
 
-"""template = {
+"""TODO: create nfsShare through a snapshot
+template = {
     constants.REST_OBJECT_KEY: 'nfsShare',
     constants.ACTIONS_KEY: {
         'create': 
