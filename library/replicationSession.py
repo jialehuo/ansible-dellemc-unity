@@ -60,14 +60,14 @@ def failback(params, unity):
 
 
 template = {
-    constants.REST_OBJECT_KEY: 'replicationSession',
-    constants.ACTIONS_KEY: {
+    constants.REST_OBJECT: 'replicationSession',
+    constants.ACTIONS: {
         'create': {constants.ACTION_TYPE: constants.ActionType.UPDATE,
-                   constants.PARAMETER_TYPES_KEY: parameters_all.get('create')},
-        'modify': {constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-                   constants.PARAMETER_TYPES_KEY: parameters_all.get('modify')},
-        'delete': {constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-                   constants.PARAMETER_TYPES_KEY: parameters_all.get('delete')},
+                   constants.PARAMETER_TYPES: parameters_all.get('create')},
+        'modify': {constants.ACTION_TYPE: constants.ActionType.UPDATE,
+                   constants.PARAMETER_TYPES: parameters_all.get('modify')},
+        'delete': {constants.ACTION_TYPE: constants.ActionType.UPDATE,
+                   constants.PARAMETER_TYPES: parameters_all.get('delete')},
         'resume': {constants.EXECUTED_BY: resume},
         'pause': {constants.EXECUTED_BY: pause},
         'sync': {constants.EXECUTED_BY: sync},

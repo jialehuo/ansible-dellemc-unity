@@ -41,8 +41,8 @@ template = {
             },
         'modifyVSA':
             {
-                constants.ACTION_TYPE_KEY: constants.ActionType.UPDATE,
-                constants.PARAMETER_TYPES_KEY: parameters_all.get('modifyVSA'),
+                constants.ACTION_TYPE: constants.ActionType.UPDATE,
+                constants.PARAMETER_TYPES: parameters_all.get('modifyVSA'),
                 constants.DO_ACTION: 'modify'
             },
         'delete':
