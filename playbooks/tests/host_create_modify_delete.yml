@@ -6,7 +6,7 @@
     - name: Create host
       host:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         create:
@@ -18,7 +18,7 @@
     - name: Modify host
       host:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         modify:
@@ -30,7 +30,7 @@
     - name: Delete host
       host:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         delete:

@@ -6,7 +6,7 @@
     - name: Get filesystem id
       commonGetPost:
         login:
-          host: "{{ unity_host }}"
+          unityIP: "{{ unity_host }}"
           username: "{{ unity_username }}"
           password: "{{ unity_password }}"
         get:
@@ -18,11 +18,11 @@
     - name: Create nfsShare
       nfsShare:
         login:
-          host: 192.168.70.217
+          unityIP: 192.168.70.217
           username: admin
           password: Password123!
         create:
-          storageResourceId: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
+          storageResource: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: result1

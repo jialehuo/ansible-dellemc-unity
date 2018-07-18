@@ -1,7 +1,7 @@
 ######## Unity vars ########
 
 unity_host: 192.168.70.217
-#unity_host: 192.168.70.218
+unity_host2: 192.168.70.218
 
 default_password: Password123#
 

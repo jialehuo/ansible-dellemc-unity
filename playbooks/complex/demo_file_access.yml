@@ -4,7 +4,7 @@
     - name: get disks
       virtualDisk:
        login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
        get:
@@ -15,7 +15,7 @@
     - name: Create pool
       pool:
         login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         createVSA:
@@ -29,7 +29,7 @@
     - name: create Nas Server
       nasServer:
          login:
-           host: "{{ host }}"
+           unityIP: "{{ host }}"
            username: "{{ username }}"
            password: "{{ password }}"
          create:
@@ -43,7 +43,7 @@
     - name: nfsServer creation
       nfsServer:
         login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         create:
@@ -54,7 +54,7 @@
     - name: create fileInterface
       fileInterface:
         login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         create:
@@ -67,7 +67,7 @@
     - name: create file system
       filesystem:
         login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         create:
@@ -83,11 +83,11 @@
     - name: create nfsShare
       nfsShare:
         login:
-          host: "{{ host }}"
+          unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         create:
-          storageResourceId: {'id': "{{ file_system_create_results['output']['create']['storageResource']['id'] }}"}
+          storageResource: {'id': "{{ file_system_create_results['output']['create']['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: create_nfs_share_results
