@@ -22,7 +22,7 @@
           username: admin
           password: Password123!
         create:
-          storageResourceId: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
+          storageResource: {'id': "{{ result['output']['get'][0]['storageResource']['id'] }}"}
           name: nfsShareTestPlaybook
           path: '/'
       register: result1
