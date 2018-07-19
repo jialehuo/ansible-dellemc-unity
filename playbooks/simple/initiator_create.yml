@@ -1,14 +1,15 @@
 ---
 - hosts: localhost
   tasks:
-    - name: host create
-      host:
+    - name: initiator create
+      initiator:
         login:
           unityIP: "{{ host }}"
           username: "{{ username }}"
           password: "{{ password }}"
         create:
-          type: 1
-          name: hostByPlaybook
+          host: { id: Host_24 }
+          initiatorType: 2
+          initiatorWWNorIqn: iqn.1992-04.com.emc:cx.virt1808tlgdk3.a1
       register: result
     - debug: var=result

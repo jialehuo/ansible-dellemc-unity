@@ -2,7 +2,6 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
-from dellemc_unity_sdk import validator
 from dellemc_unity_sdk import supportive_functions
 from dellemc_unity_sdk.unity import Unity
 from dellemc_unity_sdk import constants
@@ -13,18 +12,18 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
 
 parameters_all = {
     'create': {
-        'required': {'type', 'name'},
-        'optional': {'description','osType','tenant'},
+        'required': {'ethernetPort', 'ipAddress'},
+        'optional': {'netmask','v6PrefixLength','vlanId','gateway'},
         },
     'modify': {
         'required': {'id'},
-        'optional': {'name','description','osType'},
+        'optional': {'ipAddress','netmask','v6PrefixLength','vlanId','gateway'},
         },
     'delete': {'required': {'id'}}
 }
 
 template = {
-    constants.REST_OBJECT: 'host',
+    constants.REST_OBJECT: 'iscsiPortal',
     constants.ACTIONS: {
         'create': {constants.ACTION_TYPE:constants.ActionType.UPDATE, 
         constants.PARAMETER_TYPES:parameters_all.get('create')},

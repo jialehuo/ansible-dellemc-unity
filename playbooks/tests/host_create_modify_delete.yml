@@ -1,39 +1,34 @@
 ---
 - hosts: localhost
-  vars_files:
-    - ../../group_vars/all
   tasks:
-    - name: Create host
+    - name: host create
       host:
         login:
-          unityIP: "{{ unity_host }}"
-          username: "{{ unity_username }}"
-          password: "{{ unity_password }}"
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         create:
-          type: "{{ host_type }}"
-          name: "{{ host_name }}"
-      register: result1
-    - debug: var=result1['output']
-
-    - name: Modify host
+          type: 1
+          name: "hostByPlaybook"
+      register: result
+    - debug: var=result
+    - name: host modify
       host:
         login:
-          unityIP: "{{ unity_host }}"
-          username: "{{ unity_username }}"
-          password: "{{ unity_password }}"
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         modify:
-          id: "{{ result1['output']['create']['id'] }}"
-          name: "host_with_modified_name"
-      register: result2
-    - debug: var=result2['output']
-
-    - name: Delete host
+          id: "{{ result['output']['create']['id'] }}"
+          name: "host_with_modifed_name"
+    - debug: var=result
+    - name: host delete
       host:
         login:
-          unityIP: "{{ unity_host }}"
-          username: "{{ unity_username }}"
-          password: "{{ unity_password }}"
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         delete:
-          id: "{{ result1['output']['create']['id'] }}"
-      register: result3
-    - debug: var=result3['output']
+          id: "{{ result['output']['create']['id'] }}"
+      register: result
+    - debug: var=result

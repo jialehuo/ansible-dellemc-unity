@@ -13,18 +13,18 @@ ANSIBLE_METADATA = {'metadata_version': '0.1',
 
 parameters_all = {
     'create': {
-        'required': {'type', 'name'},
-        'optional': {'description','osType','tenant'},
+        'required': {'host', 'initiatorType','initiatorWWNorIqn'},
+        'optional': {'chapUser','chapSecret','chapSecretType','isIgnored'},
         },
     'modify': {
         'required': {'id'},
-        'optional': {'name','description','osType'},
+        'optional': {'isIgnored','chapUser','chapSecret','chapSecretType','host'},
         },
     'delete': {'required': {'id'}}
 }
 
 template = {
-    constants.REST_OBJECT: 'host',
+    constants.REST_OBJECT: 'hostInitiator',
     constants.ACTIONS: {
         'create': {constants.ACTION_TYPE:constants.ActionType.UPDATE, 
         constants.PARAMETER_TYPES:parameters_all.get('create')},

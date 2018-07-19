@@ -2,7 +2,9 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from dellemc_unity_sdk import runner
+from dellemc_unity_sdk import validator
 from dellemc_unity_sdk import supportive_functions
+from dellemc_unity_sdk.unity import Unity
 from dellemc_unity_sdk import constants
 
 ANSIBLE_METADATA = {'metadata_version': '0.1',
@@ -24,18 +26,20 @@ parameters_all = {
 template = {
     constants.REST_OBJECT: 'storageResource',
     constants.ACTIONS: {
-        'createLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        'createLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE, 
         constants.PARAMETER_TYPES:parameters_all.get('create')},
-        'modifyLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        'modifyLun': {constants.ACTION_TYPE:constants.ActionType.UPDATE, 
         constants.PARAMETER_TYPES:parameters_all.get('modify')},
-        'delete': {constants.ACTION_TYPE:constants.ActionType.UPDATE,
+        'delete': {constants.ACTION_TYPE:constants.ActionType.UPDATE, 
         constants.PARAMETER_TYPES:parameters_all.get('delete')}
     }
 }
 
 
 def main():
-    arguments = supportive_functions.create_arguments_for_ansible_module(template)
+    arguments = runner.create_arguments_for_ansible_module([
+        {constants.ACTION_NAME: 'createLun'},{constants.ACTION_NAME: 'modifyLun'},
+        {constants.ACTION_NAME: 'delete'}])
 
     ansible_module = AnsibleModule(arguments, supports_check_mode=True)
     runner.run(ansible_module, template)

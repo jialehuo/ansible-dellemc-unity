@@ -1,16 +1,14 @@
 ---
 - hosts: localhost
-  vars_files:
-    - ../../group_vars/all
   tasks:
-    - name: Create lun
+    - name: lun create
       lun:
         login:
-          unityIP: "{{ unity_host }}"
-          username: "{{ unity_username }}"
-          password: "{{ unity_password }}"
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
         createLun:
-          name: "{{ lun_name }}"
-          lunParameters: {pool: {id: "{{ pool_id }}"}, "size": "{{ lun_size }}"}
-      register: result1
-    - debug: var=result1['output']
+          name: lunByPlaybook
+          lunParameters: { pool: { id: pool_51}, size: 1073741824}
+      register: result
+    - debug: var=result
