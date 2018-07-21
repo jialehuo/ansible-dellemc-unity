@@ -22,7 +22,7 @@
           password: "{{ password }}"
         create:
           type: 1
-          name: Host (Demo)
+          name: Host (DEMO)
       register: create_Host
     - debug: var=create_Host
 
@@ -61,6 +61,7 @@
           host: {id: "{{ create_Host['output']['create']['id'] }}"}
           initiatorType: 2
           initiatorWWNorIqn: iqn.1993-08.org.debian:01:d84139d664bf
+
       register: create_iscsiInitiator
     - debug: var=create_iscsiInitiator
 

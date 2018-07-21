@@ -1,7 +1,6 @@
 ---
 - hosts: localhost
   tasks:
-
     - name: get pool id
       commonGetPost:
         login:
@@ -21,10 +20,9 @@
           username: "{{ username }}"
           password: "{{ password }}"
         createLun:
-          name: LUN remote (Demo) 
-          lunParameters: { 
-          pool: {id: "{{ get_Pool['output']['get'][0]['id'] }}"}, size: 1073741824, hostAccess: [{host: {id: "{{ create_Host['output']['create']['id'] }}"}, accessMask: 3}],}
-          replicationParameters: { isDestination: True }
+          name: LUN remote (DEMO) 
+          lunParameters: {pool: {id: "{{ get_Pool['output']['get'][0]['id'] }}"}, size: 1073741824 }
+          replicationParameters: { isReplicationDestination: True }
       register: create_Lun
     - debug: var=create_Lun
 
