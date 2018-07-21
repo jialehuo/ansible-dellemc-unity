@@ -45,7 +45,7 @@
           username: "{{ username }}"
           password: "{{ password }}"
         createLun:
-          name: LUN (Demo)
+          name: LUN (DEMO)
           lunParameters: { 
           pool: {id: "{{ get_Pool['output']['get'][0]['id'] }}"}, size: 1073741824, hostAccess: [{host: {id: "{{ create_Host['output']['create']['id'] }}"}, accessMask: 3}]}
       register: create_Lun
