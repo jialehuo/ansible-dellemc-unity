@@ -1,0 +1,34 @@
+---
+- hosts: localhost
+  tasks:
+    - name: host create
+      host:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        create:
+          type: 1
+          name: "hostByPlaybook"
+      register: result
+    - debug: var=result
+    - name: host modify
+      host:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        modify:
+          id: "{{ result['output']['create']['id'] }}"
+          name: "host_with_modifed_name"
+    - debug: var=result
+    - name: host delete
+      host:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        delete:
+          id: "{{ result['output']['create']['id'] }}"
+      register: result
+    - debug: var=result

@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: lun create
+      lun:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        createLun:
+          name: lunByPlaybook
+          lunParameters: { pool: { id: pool_51}, size: 1073741824}
+      register: result
+    - debug: var=result

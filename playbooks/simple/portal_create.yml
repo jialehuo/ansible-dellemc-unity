@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  tasks:
+    - name: portal create
+      portal:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        create:
+          ethernetPort: {"id": "spa_eth0"}
+          ipAddress: "192.168.70.217"
+          netmask: "255.255.255.0"
+      register: result
+    - debug: var=result
+

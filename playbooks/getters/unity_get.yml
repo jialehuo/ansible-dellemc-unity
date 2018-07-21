@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  vars_files:
+    - ../../group_vars/all
+  tasks:
+    - name: Get lun
+      commonGetPost:
+        login:
+          unityIP: "{{ unity_host }}"
+          username: "{{ unity_username }}"
+          password: "{{ unity_password }}"
+        get:
+          resource_type: lun
+          fields: {name}
+      register: result1
+    - debug: var=result1

@@ -1,0 +1,28 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get pool id
+      commonGetPost:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        get:
+          resource_type: pool
+          fields: id
+      register: get_Pool
+    - debug: var=get_Pool
+
+    - name: lun create
+      lun:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        createLun:
+          name: LUN remote (DEMO) 
+          lunParameters: {pool: {id: "{{ get_Pool['output']['get'][0]['id'] }}"}, size: 1073741824 }
+          replicationParameters: { isReplicationDestination: True }
+      register: create_Lun
+    - debug: var=create_Lun
+

@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  tasks:
+    - name: host create
+      host:
+        login:
+          unityIP: "{{ host }}"
+          username: "{{ username }}"
+          password: "{{ password }}"
+        create:
+          type: 1
+          name: hostByPlaybook
+      register: result
+    - debug: var=result
